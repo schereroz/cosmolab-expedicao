@@ -139,3 +139,16 @@ test("turns missions and the matter lab into repeatable experiments", async () =
   assert.match(matter, /Tipo de ligação/);
   assert.match(science, /phaseAtTemperature/);
 });
+
+test("renders collisions as a physical 3D event instead of flat CSS bodies", async () => {
+  const scene = await readFile(new URL("../app/components/CollisionScene3D.tsx", import.meta.url), "utf8");
+  const cosmic = await readFile(new URL("../app/components/CosmicLab.tsx", import.meta.url), "utf8");
+  assert.match(scene, /from "three"/);
+  assert.match(scene, /requestAnimationFrame/);
+  assert.match(scene, /AdditiveBlending/);
+  assert.match(scene, /TorusGeometry/);
+  assert.match(scene, /fragmentVelocity/);
+  assert.match(scene, /horizonte de eventos/i);
+  assert.match(cosmic, /CollisionScene3D/);
+  assert.doesNotMatch(cosmic, /projectile-body/);
+});

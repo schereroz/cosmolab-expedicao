@@ -6,6 +6,7 @@ import { formatScientific, simulateCollision } from "../lib/science";
 import type { CollisionResult, GameProfile } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
 import { CollisionTelemetry } from "./CollisionTelemetry";
+import { CollisionScene3D } from "./CollisionScene3D";
 import { SciencePassport } from "./SciencePassport";
 
 const guidedScenarios = [
@@ -105,17 +106,7 @@ export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
         </aside>
 
         <div className="simulation-column">
-          <div className={`collision-stage ${result ? `has-result effect-${result.visualEffect} affect-${result.affectedBody}` : ""}`} key={runId}>
-            <div className="stage-grid" aria-hidden="true" />
-            <div className="trajectory-line" aria-hidden="true" />
-            <div className={`projectile-body body-${projectile.kind}`}><span>{projectile.name}</span></div>
-            <div className={`target-body body-${target.kind}`}><span>{target.name}</span></div>
-            {result && <div className="impact-flash" aria-hidden="true" />}
-            {result && <div className="collision-particles" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>}
-            {result && <div className="accretion-ring" aria-hidden="true" />}
-            <div className="stage-hud top-left">SIMULAÇÃO EDUCATIVA<br /><b>Escala visual adaptada</b></div>
-            <div className="stage-hud bottom-right">v = {speed} km/s<br />θ = {angle}°</div>
-          </div>
+          <CollisionScene3D projectile={projectile} target={target} speed={speed} angle={angle} result={result} runId={runId} />
 
           {result ? (
             <div className="result-panel" role="status" aria-live="polite">
