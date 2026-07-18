@@ -113,3 +113,16 @@ test("keeps the chosen animal beside the learner during planetary fieldwork", as
   assert.match(survey, /cosmolab-crew-cockpit\.png/);
   assert.match(shell, /avatarId=\{profile\.avatarId\}/);
 });
+
+test("starts the flight inside an interactive first-person cockpit", async () => {
+  const flight = await readFile(new URL("../app/components/SpaceFlightExperience.tsx", import.meta.url), "utf8");
+  const cockpit = await readFile(new URL("../app/components/CockpitHUD.tsx", import.meta.url), "utf8");
+  assert.match(flight, /useState<FlightView>\("cockpit"\)/);
+  assert.match(flight, /camera\.fov/);
+  assert.match(flight, /CockpitHUD/);
+  assert.match(cockpit, /cosmolab-cockpit-first-person\.png/);
+  assert.match(cockpit, /Visão interna da cabine/);
+  assert.match(cockpit, /Combustível/);
+  assert.match(cockpit, /Integridade/);
+  assert.match(cockpit, /aria-label=\{`Ouvir \$\{avatar\.name\} na cabine`\}/);
+});

@@ -5,8 +5,10 @@ import Image from "next/image";
 import * as THREE from "three";
 import { avatars, planets } from "../data";
 import type { GameProfile, PlanetRecord } from "../types";
+import { CockpitHUD } from "./CockpitHUD";
 
 type FlightControl = "thrust" | "brake" | "left" | "right";
+type FlightView = "cockpit" | "chase";
 
 const planetPositions: Record<string, [number, number, number]> = {
   mars: [-22, 3, -85],
@@ -59,6 +61,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
   const autopilotRef = useRef(false);
   const pausedRef = useRef(false);
   const arrivedRef = useRef(false);
+  const viewModeRef = useRef<FlightView>("cockpit");
   const [destinationId, setDestinationId] = useState(initialDestination?.id ?? "mars");
   const [autopilot, setAutopilot] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -66,12 +69,14 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
   const [distance, setDistance] = useState(0);
   const [arrived, setArrived] = useState(false);
   const [speakerId, setSpeakerId] = useState(profile.avatarId);
+  const [viewMode, setViewMode] = useState<FlightView>("cockpit");
   const destination = useMemo(() => planets.find((planet) => planet.id === destinationId) ?? planets[0], [destinationId]);
   const speaker = avatars.find((avatar) => avatar.id === speakerId) ?? avatars[0];
 
   useEffect(() => { destinationRef.current = destinationId; }, [destinationId]);
   useEffect(() => { autopilotRef.current = autopilot; }, [autopilot]);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
+  useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -214,8 +219,14 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
       if (!reduceMotion) target.rotation.y += delta * 0.08;
       const targetRing = destinationRings.get(destinationRef.current);
       if (targetRing) { targetRing.rotation.z += delta * 0.35; targetRing.scale.setScalar(1 + Math.sin(clock.elapsedTime * 2) * 0.04); }
-      cameraTarget.copy(ship.position).add(new THREE.Vector3(0, 5.2, 14).applyQuaternion(ship.quaternion));
-      camera.position.lerp(cameraTarget, Math.min(1, delta * 3.4));
+      const inCockpit = viewModeRef.current === "cockpit";
+      const cameraOffset = inCockpit ? new THREE.Vector3(0, 0.62, -0.42) : new THREE.Vector3(0, 5.2, 14);
+      cameraTarget.copy(ship.position).add(cameraOffset.applyQuaternion(ship.quaternion));
+      camera.position.lerp(cameraTarget, Math.min(1, delta * (inCockpit ? 7.5 : 3.4)));
+      if (inCockpit && !reduceMotion && (controlsRef.current.thrust || autopilotRef.current)) camera.position.y += Math.sin(clock.elapsedTime * 42) * 0.018;
+      const desiredFov = inCockpit ? 61 + velocity.length() * 12 : 58;
+      camera.fov += (desiredFov - camera.fov) * Math.min(1, delta * 3);
+      camera.updateProjectionMatrix();
       camera.lookAt(ship.position.clone().add(forward.clone().multiplyScalar(12)));
       telemetryElapsed += delta;
       if (telemetryElapsed > 0.12) {
@@ -250,21 +261,22 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
       <header className="flight-topbar">
         <div><p className="eyebrow">Simulador de voo 3D · modelo educativo</p><h1 id="flight-title">Comande a nave Aurora</h1></div>
         <label>Destino<select value={destinationId} onChange={(event) => { destinationRef.current = event.target.value; arrivedRef.current = false; setArrived(false); setDestinationId(event.target.value); setAutopilot(false); }} disabled={arrived}>{planets.map((planet) => <option key={planet.id} value={planet.id}>{planet.name} · {planet.landingMode === "pouso" ? "pouso" : "sonda"}</option>)}</select></label>
+        <div className="flight-view-toggle" aria-label="Escolher câmera"><button className={viewMode === "cockpit" ? "active" : ""} onClick={() => setViewMode("cockpit")} aria-label="Usar visão interna da cabine" aria-pressed={viewMode === "cockpit"}>Cabine</button><button className={viewMode === "chase" ? "active" : ""} onClick={() => setViewMode("chase")} aria-label="Usar visão externa da nave" aria-pressed={viewMode === "chase"}>Externa</button></div>
         <button onClick={() => setPaused((value) => !value)} aria-pressed={paused}>{paused ? "Continuar" : "Pausar"}</button>
         <button className="flight-close" onClick={onClose} aria-label="Fechar simulador de voo">×</button>
       </header>
 
-      <aside className="flight-crew-panel" aria-label="Comunicador da tripulação">
+      {viewMode === "cockpit" ? <CockpitHUD speakerId={speakerId} destinationName={destination.name} message={arrived ? `Chegamos à zona segura de ${destination.name}. Agora vamos observar antes de pousar.` : crewTips[speaker.id]} speed={speed} distance={distance} fuel={Math.max(18, 100 - Math.round(speed / 1_800))} autopilot={autopilot} arrived={arrived} onSpeakerChange={setSpeakerId} /> : <aside className="flight-crew-panel" aria-label="Comunicador da tripulação">
         <Image src="/cosmolab-crew-cockpit.png" alt="Panda, gorila, capivara, axolote, coruja e polvo astronautas dentro da nave" width={1672} height={941} priority />
         <div className="crew-message"><small>COMUNICADOR · {speaker.role}</small><strong>{speaker.name} na escuta</strong><p>{arrived ? `Chegamos à zona segura de ${destination.name}. Agora vamos observar antes de pousar.` : crewTips[speaker.id]}</p></div>
         <div className="crew-switcher" aria-label="Falar com a tripulação">{avatars.map((avatar) => <button key={avatar.id} className={speakerId === avatar.id ? "active" : ""} onClick={() => setSpeakerId(avatar.id)} aria-label={`Ouvir ${avatar.name}`}>{avatar.name}</button>)}</div>
-      </aside>
+      </aside>}
 
-      <section className="flight-telemetry" aria-label="Telemetria da nave">
+      {viewMode === "chase" && <section className="flight-telemetry" aria-label="Telemetria da nave">
         <span><small>VELOCIDADE</small><strong>{speed.toLocaleString("pt-BR")} km/h</strong></span>
         <span><small>DISTÂNCIA ATÉ {destination.name.toUpperCase()}</small><strong>{distance.toLocaleString("pt-BR")} km</strong></span>
         <span><small>MODO</small><strong>{arrived ? "Em órbita segura" : autopilot ? "Piloto automático" : "Pilotagem manual"}</strong></span>
-      </section>
+      </section>}
 
       <div className="flight-controls" aria-label="Controles da nave">
         <button onPointerDown={() => setControl("left", true)} onPointerUp={() => setControl("left", false)} onPointerLeave={() => setControl("left", false)} aria-label="Virar nave à esquerda">←<small>ESQUERDA</small></button>
