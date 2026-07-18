@@ -41,6 +41,15 @@ export function WorldView({ profile, onNavigate, onPlanet }: WorldViewProps) {
       </div>
       <ActivityGuide title="Mapa de exploração" goal="Escolher seu próximo destino científico." steps={["Veja as quatro regiões", "Escolha um laboratório", "Pouse em um planeta", "Volte ao mapa quando quiser"]} reward="Não existe ordem obrigatória: sua curiosidade cria a rota." />
 
+      <section className="mobile-flight-launcher" aria-label="Viagem espacial rápida">
+        <div><p className="eyebrow">Cabine pronta</p><h2>Pilote até um planeta</h2><p>Escolha um destino e a rota assistida ajuda você a chegar.</p></div>
+        <button className="primary-button" onClick={() => { setFlightDestination(undefined); setShowFlight(true); }}>Abrir cabine 3D</button>
+        <div className="mobile-flight-destinations" aria-label="Destinos rápidos">
+          <strong>Destinos rápidos</strong>
+          {planets.slice(0, 3).map((planet) => <button key={planet.id} onClick={() => { setFlightDestination(planet); setShowFlight(true); }}>{planet.name}</button>)}
+        </div>
+      </section>
+
       <section className="daily-dashboard" aria-label="Progresso diário"><div className="daily-mission"><div><p className="eyebrow">Expedição do dia</p><h2>{dailyMission.title}</h2><p>{dailyMission.description}</p></div><span><small>RECOMPENSA</small><strong>+{dailyMission.xp} XP</strong></span><button className={dailyCompleted ? "secondary-button" : "primary-button"} onClick={() => onNavigate("missions")}>{dailyCompleted ? "Revisitar missão" : "Abrir no painel"}</button></div><div className="streak-card"><small>Sequência científica</small><strong>{profile.streak || 1} dias</strong><p>Volte, experimente e registre ao menos uma observação por dia.</p><div className="streak-week">{Array.from({ length: 7 }, (_, index) => <i className={index < Math.min(7, profile.streak || 1) ? "active" : ""} key={index}><span>{index + 1}</span></i>)}</div></div></section>
 
       <div className="space-map">

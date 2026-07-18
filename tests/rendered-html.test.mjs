@@ -163,3 +163,29 @@ test("renders collisions as a physical 3D event instead of flat CSS bodies", asy
   assert.match(cosmic, /CollisionScene3D/);
   assert.doesNotMatch(cosmic, /projectile-body/);
 });
+
+test("keeps the complete exploration loop usable on phone screens", async () => {
+  const app = await readFile(new URL("../app/components/CosmoApp.tsx", import.meta.url), "utf8");
+  const world = await readFile(new URL("../app/components/WorldView.tsx", import.meta.url), "utf8");
+  const matter = await readFile(new URL("../app/components/MatterLab.tsx", import.meta.url), "utf8");
+  const cosmic = await readFile(new URL("../app/components/CosmicLab.tsx", import.meta.url), "utf8");
+  const flight = await readFile(new URL("../app/components/SpaceFlightExperience.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+
+  assert.match(app, /aria-label="Navegação principal"/);
+  assert.match(world, /mobile-flight-launcher/);
+  assert.match(world, /Destinos rápidos/);
+  assert.match(matter, /periodic-swipe-hint/);
+  assert.match(cosmic, /mobile-section-nav/);
+  assert.match(cosmic, /id="cosmic-parameters"/);
+  assert.match(cosmic, /id="cosmic-simulation"/);
+  assert.match(flight, /mobile-flight-tip/);
+  assert.match(styles, /grid-template-columns:\s*repeat\(6,\s*1fr\)/);
+  assert.match(styles, /min-height:\s*44px/);
+  assert.match(styles, /\.element-tile\s*\{[^}]*width:\s*44px/s);
+  assert.match(styles, /min-width:\s*621px[^}]*max-width:\s*900px[^}]*orientation:\s*landscape/s);
+  assert.match(flight, /window\.innerWidth <= 620 \? 1\.25 : 1\.75/);
+  assert.match(flight, /new THREE\.Timer\(\)/);
+  assert.doesNotMatch(flight, /new THREE\.Clock\(\)/);
+  assert.doesNotMatch(styles, /\.app-header nav button\s*\{\s*font-size:\s*0/);
+});

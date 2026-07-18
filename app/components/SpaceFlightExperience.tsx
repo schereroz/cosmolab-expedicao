@@ -84,7 +84,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
     const canvas = canvasRef.current;
     if (!canvas) return;
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(1.75, window.devicePixelRatio || 1));
+    renderer.setPixelRatio(Math.min(window.innerWidth <= 620 ? 1.25 : 1.75, window.devicePixelRatio || 1));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
@@ -148,7 +148,8 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
     const forward = new THREE.Vector3(0, 0, -1);
     const targetDirection = new THREE.Vector3();
     const cameraTarget = new THREE.Vector3();
-    const clock = new THREE.Clock();
+    const timer = new THREE.Timer();
+    timer.connect(document);
     let animationFrame = 0;
     let telemetryElapsed = 0;
 
@@ -173,9 +174,10 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
     resizeObserver.observe(canvas);
     resize();
 
-    const animate = () => {
+    const animate = (timestamp?: number) => {
       animationFrame = window.requestAnimationFrame(animate);
-      const delta = Math.min(0.034, clock.getDelta());
+      timer.update(timestamp);
+      const delta = Math.min(0.034, timer.getDelta());
       if (pausedRef.current) { renderer.render(scene, camera); return; }
       const target = planetMeshes.get(destinationRef.current);
       if (!target) return;
@@ -223,7 +225,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
       const cameraOffset = inCockpit ? new THREE.Vector3(0, 0.62, -0.42) : new THREE.Vector3(0, 5.2, 14);
       cameraTarget.copy(ship.position).add(cameraOffset.applyQuaternion(ship.quaternion));
       camera.position.lerp(cameraTarget, Math.min(1, delta * (inCockpit ? 7.5 : 3.4)));
-      if (inCockpit && !reduceMotion && (controlsRef.current.thrust || autopilotRef.current)) camera.position.y += Math.sin(clock.elapsedTime * 42) * 0.018;
+      if (inCockpit && !reduceMotion && (controlsRef.current.thrust || autopilotRef.current)) camera.position.y += Math.sin(timer.getElapsed() * 42) * 0.018;
       const desiredFov = inCockpit ? 61 + velocity.length() * 12 : 58;
       camera.fov += (desiredFov - camera.fov) * Math.min(1, delta * 3);
       camera.updateProjectionMatrix();
@@ -242,6 +244,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
       window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("keydown", keyDown);
       window.removeEventListener("keyup", keyUp);
+      timer.dispose();
       resizeObserver.disconnect();
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh || object instanceof THREE.Points) {
@@ -285,6 +288,8 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
         <button onPointerDown={() => setControl("brake", true)} onPointerUp={() => setControl("brake", false)} onPointerLeave={() => setControl("brake", false)} aria-label="Frear nave">↓<small>FREAR</small></button>
         <button onPointerDown={() => setControl("right", true)} onPointerUp={() => setControl("right", false)} onPointerLeave={() => setControl("right", false)} aria-label="Virar nave à direita">→<small>DIREITA</small></button>
       </div>
+
+      <p className="mobile-flight-tip">Segure os controles para pilotar · use a rota assistida para chegar</p>
 
       <div className="flight-actions-panel">
         <p><kbd>W</kbd>/<kbd>↑</kbd> acelerar · <kbd>A</kbd>/<kbd>D</kbd> virar · <kbd>S</kbd>/<kbd>↓</kbd> frear</p>

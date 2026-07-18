@@ -65,8 +65,12 @@ export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
       </div>
       <ActivityGuide title="Colisões" goal="Prever o encontro, testar parâmetros e explicar o resultado usando energia, massa e trajetória." steps={["Escolha os objetos", "Faça uma previsão", "Ajuste velocidade e ângulo", "Simule e compare"]} reward="Descubra quando um corpo desvia, se fragmenta, se funde ou é capturado." />
 
+      <nav className="mobile-section-nav" aria-label="Atalhos do Sandbox Cósmico">
+        <a href="#cosmic-parameters">1. Parâmetros</a><a href="#cosmic-simulation">2. Simulação</a><a href="#cosmic-result">3. Resultado</a>
+      </nav>
+
       <div className="cosmic-layout">
-        <aside className="control-panel">
+        <aside className="control-panel" id="cosmic-parameters">
           <h2>Preparar encontro</h2>
           <label>Astro ou artefato lançado
             <select value={projectileId} onChange={(event) => setProjectileId(event.target.value)}>
@@ -107,11 +111,11 @@ export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
           </div>
         </aside>
 
-        <div className="simulation-column">
+        <div className="simulation-column" id="cosmic-simulation">
           <CollisionScene3D projectile={projectile} target={target} speed={speed} angle={angle} result={result} runId={runId} />
 
           {result ? (
-            <div className="result-panel" role="status" aria-live="polite">
+            <div className="result-panel" id="cosmic-result" role="status" aria-live="polite">
               <div className="result-title">
                 <span className="result-symbol">◎</span>
                 <div><small>RESULTADO PROVÁVEL</small><h2>{result.outcome}</h2></div>
@@ -133,7 +137,7 @@ export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
               />
             </div>
           ) : (
-            <div className="empty-result"><span>↗</span><div><strong>Pronto para calcular</strong><p>Ajuste os parâmetros e inicie a simulação. Os astros originais nunca são alterados.</p></div></div>
+            <div className="empty-result" id="cosmic-result"><span>↗</span><div><strong>Pronto para calcular</strong><p>Ajuste os parâmetros e inicie a simulação. Os astros originais nunca são alterados.</p></div></div>
           )}
           {result && <CollisionTelemetry projectile={projectile} target={target} speed={speed} angle={angle} result={result} />}
 
