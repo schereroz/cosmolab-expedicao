@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { elements, evidenceLabels } from "../data";
 import { combineElements } from "../lib/science";
-import type { ElementRecord } from "../types";
+import type { ElementRecord, GameProfile } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
 import { SciencePassport } from "./SciencePassport";
 
@@ -22,12 +22,26 @@ function ElementTile({ element, active, onClick }: { element: ElementRecord; act
   return <button className={`element-tile group-${element.group} ${active ? "active" : ""}`} onClick={onClick} aria-label={`Selecionar ${element.name}`}><small>{element.number}</small><strong>{element.symbol}</strong><span>{element.name}</span></button>;
 }
 
-export function MatterLab() {
+const orbitalOrder = [[1,2],[2,2],[2,6],[3,2],[3,6],[4,2],[3,10],[4,6],[5,2],[4,10],[5,6],[6,2],[4,14],[5,10],[6,6],[7,2],[5,14],[6,10],[7,6]] as const;
+function simplifiedShells(atomicNumber: number) {
+  let remaining = atomicNumber;
+  const shells = Array(7).fill(0) as number[];
+  for (const [shell, capacity] of orbitalOrder) {
+    const electrons = Math.min(remaining, capacity);
+    shells[shell - 1] += electrons;
+    remaining -= electrons;
+    if (remaining === 0) break;
+  }
+  return shells.filter((count) => count > 0);
+}
+
+export function MatterLab({ mode }: { mode: GameProfile["ageBand"] }) {
   const [selected, setSelected] = useState<ElementRecord[]>([elements[0], elements[0], elements[7]]);
   const [activeElement, setActiveElement] = useState<ElementRecord>(elements[7]);
   const [query, setQuery] = useState("");
   const [lesson, setLesson] = useState<"atom" | "bonds" | "trends">("atom");
   const result = useMemo(() => combineElements(selected), [selected]);
+  const shells = useMemo(() => simplifiedShells(activeElement.number), [activeElement.number]);
   const elementBySymbol = useMemo(() => new Map(elements.map((element) => [element.symbol, element])), []);
   const matches = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("pt-BR");
@@ -68,6 +82,7 @@ export function MatterLab() {
             {lesson === "trends" && <div className="lesson-copy"><span className="lesson-visual">↗<small>posição revela pistas</small></span><p>O período {activeElement.period} indica quantas camadas eletrônicas principais são ocupadas. Elementos na mesma coluna costumam apresentar comportamentos parecidos porque têm configurações externas semelhantes. Posição é uma pista — não uma regra sem exceções.</p></div>}
             <div className="where-used"><strong>Onde investigar:</strong> {activeElement.use}</div>
           </section>
+          {mode === "researcher" ? <section className="mode-depth researcher-depth"><div className="mode-depth-title"><span>Σ</span><div><small>MODO PESQUISADOR</small><h2>Distribuição eletrônica simplificada</h2></div></div><div className="shell-distribution">{shells.map((count, index) => <span key={index}><small>Camada {index + 1}</small><strong>{count} e⁻</strong><meter min="0" max="32" value={count}>{count} de 32</meter></span>)}</div><p>Modelo de preenchimento por subníveis: {shells.join("–")}. Configurações reais podem apresentar exceções de menor energia; consulte uma tabela espectroscópica para alta precisão.</p></section> : <section className="mode-depth explorer-depth"><div className="mode-depth-title"><span>🧭</span><div><small>MODO EXPLORADOR</small><h2>Pista visual</h2></div></div><p>{activeElement.name} tem <strong>{shells.length} camada(s) ocupada(s)</strong>. A camada mais externa ajuda a explicar como o átomo encontra parceiros para formar materiais.</p></section>}
         </div>
 
         <div className="molecule-panel">

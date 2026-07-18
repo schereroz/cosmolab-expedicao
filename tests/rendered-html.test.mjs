@@ -55,3 +55,12 @@ test("ships a playable investigation for every main mission", async () => {
   assert.match(runner, /O que os dados mostram/);
   assert.doesNotMatch(runner, /Concluir demo/);
 });
+
+test("changes scientific depth with the learning profile", async () => {
+  const shell = await readFile(new URL("../app/components/CosmoApp.tsx", import.meta.url), "utf8");
+  const matter = await readFile(new URL("../app/components/MatterLab.tsx", import.meta.url), "utf8");
+  assert.match(shell, /<MatterLab mode=\{profile\.ageBand\}/);
+  assert.match(shell, /<CosmicLab mode=\{profile\.ageBand\}/);
+  assert.match(matter, /Distribuição eletrônica simplificada/);
+  assert.match(matter, /MODO PESQUISADOR/);
+});

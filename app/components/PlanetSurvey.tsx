@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { evidenceLabels, planets } from "../data";
-import type { PlanetRecord } from "../types";
+import type { GameProfile, PlanetRecord } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
 import { SciencePassport } from "./SciencePassport";
 
@@ -13,7 +13,7 @@ const tools = [
   { id: "magnetic", icon: "∩", label: "Magnetômetro" },
 ];
 
-export function PlanetSurvey({ initialPlanet, onClose }: { initialPlanet: PlanetRecord; onClose: () => void }) {
+export function PlanetSurvey({ initialPlanet, mode, onClose }: { initialPlanet: PlanetRecord; mode: GameProfile["ageBand"]; onClose: () => void }) {
   const [planet, setPlanet] = useState(initialPlanet);
   const [activeTool, setActiveTool] = useState("spectrometer");
   const evidence = evidenceLabels[planet.evidence];
@@ -82,6 +82,7 @@ export function PlanetSurvey({ initialPlanet, onClose }: { initialPlanet: Planet
             <div><small>CONDIÇÕES PARA VIDA CONHECIDA</small><h3>{planet.id === "europa" ? "Interessante, mas não confirmada" : planet.id === "kepler" ? "Dados insuficientes" : "Ambiente muito hostil"}</h3><p>Habitabilidade não significa que exista vida. Água, energia e química adequada são apenas parte da investigação.</p></div>
           </div>
           <SciencePassport evidence={planet.evidence} source={planet.source} assumptions={["Valores médios e arredondados", "Condições locais podem variar", "Ilustração fora de escala"]} />
+          {mode === "researcher" && <div className="researcher-rubric"><small>MODO PESQUISADOR</small><p>Compare unidade, precisão e nível de evidência de cada leitura antes de combinar os resultados em uma conclusão.</p></div>}
         </div>
       </div>
     </section>

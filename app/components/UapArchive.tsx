@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { uapCases } from "../data";
+import type { GameProfile } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
 import { SciencePassport } from "./SciencePassport";
 
 const possibleAnswers = ["Satélites", "Meteoro", "Fenômeno atmosférico", "Artefato do sensor", "Dados insuficientes", "Nave extraterrestre"];
 
-export function UapArchive() {
+export function UapArchive({ mode }: { mode: GameProfile["ageBand"] }) {
   const [caseIndex, setCaseIndex] = useState(0);
   const [answer, setAnswer] = useState<string | null>(null);
   const [inspected, setInspected] = useState<number[]>([]);
@@ -63,6 +64,7 @@ export function UapArchive() {
           )}
           {correct && <button className="primary-button next-case" onClick={() => changeCase((caseIndex + 1) % uapCases.length)}>{caseIndex === uapCases.length - 1 ? "Recomeçar os arquivos" : "Investigar próximo caso"} →</button>}
           <p className="uap-rule"><strong>Regra de ouro:</strong> “não identificado” descreve o estado dos dados. Não é uma identificação como nave extraterrestre.</p>
+          {mode === "researcher" && <div className="researcher-rubric"><small>MODO PESQUISADOR · MATRIZ DE CONFIANÇA</small><p><b>Repetibilidade:</b> o sinal apareceu novamente? · <b>Independência:</b> outro sensor confirmou? · <b>Calibração:</b> o instrumento foi testado?</p></div>}
           <SciencePassport evidence="inferred" source="Método científico para análise de observações e qualidade de dados (NASA UAP)" assumptions={["O caso é uma dramatização educativa", "Nenhuma origem extraterrestre foi estabelecida"]} />
         </div>
       </div>

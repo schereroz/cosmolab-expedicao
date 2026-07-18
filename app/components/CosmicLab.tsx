@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { celestialBodies, evidenceLabels } from "../data";
 import { formatScientific, simulateCollision } from "../lib/science";
-import type { CollisionResult } from "../types";
+import type { CollisionResult, GameProfile } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
 import { SciencePassport } from "./SciencePassport";
 
@@ -17,7 +17,7 @@ const guidedScenarios = [
 
 const frontierKinds = new Set(["buraco-negro", "buraco-branco", "minhoca", "gravastar", "fuzzball"]);
 
-export function CosmicLab() {
+export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
   const [projectileId, setProjectileId] = useState("theia");
   const [targetId, setTargetId] = useState("earth");
   const [speed, setSpeed] = useState(10);
@@ -130,6 +130,7 @@ export function CosmicLab() {
                 <span><small>Momento linear</small><strong>{formatScientific(result.momentum)} kg·m/s</strong></span>
                 <span><small>Velocidade</small><strong>{result.velocityMs.toLocaleString("pt-BR")} m/s</strong></span>
               </div>
+              {mode === "researcher" ? <div className="cosmic-equations"><div><small>ENERGIA CINÉTICA</small><strong>Eₖ = ½mv²</strong><span>{formatScientific(projectile.massKg)} × ({result.velocityMs.toLocaleString("pt-BR")})² ÷ 2</span></div><div><small>MOMENTO LINEAR</small><strong>p = mv</strong><span>Direção também importa: momento é uma grandeza vetorial.</span></div></div> : <div className="explorer-comparison"><span>🧭</span><p><strong>Tradução visual:</strong> mais massa ou mais velocidade significa mais energia para aquecer, deformar e lançar material.</p></div>}
               <SciencePassport
                 evidence={scenarioEvidence}
                 source={scenarioEvidence === "calculated_model" ? "Gravitação newtoniana e limites didáticos de energia específica" : scenarioEvidence === "hypothesis" ? "Hipóteses teóricas de espaço-tempo e objetos compactos; sem confirmação observacional para este cenário" : "Artefato narrativo virtual do CosmoLab"}
