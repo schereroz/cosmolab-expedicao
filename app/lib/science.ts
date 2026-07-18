@@ -2,6 +2,52 @@ import type { CelestialBody, CollisionResult, ElementRecord } from "../types";
 
 const G = 6.6743e-11;
 
+export interface EncounterTelemetryPoint {
+  timeS: number;
+  xM: number;
+  yM: number;
+  distanceM: number;
+  speedMs: number;
+}
+
+export function buildEncounterTelemetry(projectile: CelestialBody, target: CelestialBody, speedKmS: number, angleDegrees: number) {
+  const velocityUnit = Math.max(1, speedKmS * 1000);
+  const lengthUnit = Math.max(1, projectile.radiusM + target.radiusM);
+  const mu = (G * (projectile.massKg + target.massKg)) / (lengthUnit * velocityUnit ** 2);
+  const integrationStep = 0.025 / Math.max(1, Math.sqrt(mu) / 2);
+  let x = -6;
+  let y = 0.5 + 1.5 * (angleDegrees / 90);
+  let vx = 1;
+  let vy = 0;
+  let elapsed = 0;
+  const points: EncounterTelemetryPoint[] = [];
+
+  function acceleration(px: number, py: number) {
+    const radius = Math.max(0.15, Math.hypot(px, py));
+    const factor = -mu / radius ** 3;
+    return { x: factor * px, y: factor * py };
+  }
+
+  for (let step = 0; step < 320; step += 1) {
+    const currentAcceleration = acceleration(x, y);
+    const nextX = x + vx * integrationStep + 0.5 * currentAcceleration.x * integrationStep ** 2;
+    const nextY = y + vy * integrationStep + 0.5 * currentAcceleration.y * integrationStep ** 2;
+    const nextAcceleration = acceleration(nextX, nextY);
+    vx += 0.5 * (currentAcceleration.x + nextAcceleration.x) * integrationStep;
+    vy += 0.5 * (currentAcceleration.y + nextAcceleration.y) * integrationStep;
+    x = nextX;
+    y = nextY;
+    elapsed += integrationStep * lengthUnit / velocityUnit;
+    const distance = Math.hypot(x, y);
+    points.push({ timeS: elapsed, xM: x * lengthUnit, yM: y * lengthUnit, distanceM: distance * lengthUnit, speedMs: Math.hypot(vx, vy) * velocityUnit });
+    if (distance <= 1 || distance > 9 || !Number.isFinite(distance)) break;
+  }
+
+  const closestApproachM = Math.min(...points.map((point) => point.distanceM));
+  const peakSpeedMs = Math.max(...points.map((point) => point.speedMs));
+  return { points, closestApproachM, peakSpeedMs, durationS: points.at(-1)?.timeS ?? 0, modelNote: "Integração newtoniana simplificada de dois corpos; alvo fixo e corpos esféricos." };
+}
+
 export function simulateCollision(
   projectile: CelestialBody,
   target: CelestialBody,

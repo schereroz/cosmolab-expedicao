@@ -11,12 +11,42 @@ const tools = [
   { id: "microscope", icon: "⊕", label: "Microscópio" },
   { id: "seismic", icon: "≋", label: "Sismógrafo" },
   { id: "magnetic", icon: "∩", label: "Magnetômetro" },
-];
+] as const;
+type ToolId = typeof tools[number]["id"];
+interface InstrumentReading { title: string; summary: string; rows: Array<{ label: string; display: string; level: number }>; method: string; }
+
+const instrumentReadings: Record<string, Record<ToolId, InstrumentReading>> = {
+  mars: {
+    spectrometer: { title: "Assinaturas da atmosfera", summary: "O dióxido de carbono domina a atmosfera rarefeita; argônio e nitrogênio aparecem em proporções muito menores.", rows: [{ label: "CO₂", display: "95,3%", level: 95 }, { label: "N₂", display: "2,7%", level: 3 }, { label: "Ar", display: "1,6%", level: 2 }], method: "Espectroscopia compara comprimentos de onda absorvidos ou emitidos com assinaturas de referência." },
+    microscope: { title: "Grãos do regolito", summary: "A amostra virtual mostra fragmentos basálticos e óxidos de ferro; percloratos foram detectados em diferentes locais de Marte.", rows: [{ label: "Silicatos", display: "abundantes", level: 76 }, { label: "Óxidos de ferro", display: "detectados", level: 48 }, { label: "Percloratos", display: "traços locais", level: 15 }], method: "Microscopia identifica forma e textura; composição exige combinar outras técnicas." },
+    seismic: { title: "Interior marciano", summary: "Dados da missão InSight indicam crosta, manto e núcleo líquido maiores e menos densos que estimativas antigas.", rows: [{ label: "Crosta", display: "~24–72 km", level: 18 }, { label: "Manto", display: "~1.560 km", level: 66 }, { label: "Núcleo", display: "~1.830 km raio", level: 82 }], method: "Ondas sísmicas mudam de velocidade e direção ao atravessar materiais distintos." },
+    magnetic: { title: "Magnetismo remanente", summary: "Marte não possui hoje um campo dipolar global como a Terra, mas rochas antigas preservam magnetização regional.", rows: [{ label: "Campo global", display: "muito fraco", level: 5 }, { label: "Anomalias crustais", display: "fortes localmente", level: 62 }], method: "O magnetômetro mede intensidade e direção do campo no local da sonda." },
+  },
+  europa: {
+    spectrometer: { title: "Gelo e moléculas superficiais", summary: "Gelo de água domina; sais e outras espécies são investigados por seus espectros. A atmosfera de O₂ é extremamente tênue.", rows: [{ label: "Gelo de H₂O", display: "dominante", level: 92 }, { label: "Sais", display: "prováveis", level: 38 }, { label: "O₂ tênue", display: "detectado", level: 8 }], method: "A superfície irradiada altera moléculas; a assinatura não revela sozinha a origem do material." },
+    microscope: { title: "Textura do gelo", summary: "Fendas, blocos e terrenos caóticos sugerem renovação da crosta gelada, mas nenhuma amostra microscópica foi coletada in situ.", rows: [{ label: "Gelo cristalino", display: "observado remotamente", level: 76 }, { label: "Partículas de sal", display: "inferidas", level: 34 }], method: "Esta ampliação é um modelo baseado em sensoriamento remoto, não uma fotografia microscópica real." },
+    seismic: { title: "Casca e oceano inferidos", summary: "O oceano subterrâneo é apoiado por modelos geofísicos e campo magnético induzido; sua espessura exata continua incerta.", rows: [{ label: "Casca de gelo", display: "~15–25 km (modelo)", level: 24 }, { label: "Oceano", display: "~60–150 km (modelo)", level: 72 }, { label: "Interior rochoso", display: "inferido", level: 58 }], method: "Ainda não há uma rede sísmica em Europa; os valores são estimativas de modelos." },
+    magnetic: { title: "Campo induzido", summary: "A variação do campo de Júpiter induz uma resposta compatível com uma camada condutora — provavelmente um oceano salgado.", rows: [{ label: "Sinal induzido", display: "detectado", level: 74 }, { label: "Confiança no oceano", display: "alta, não direta", level: 83 }], method: "Indução magnética informa condutividade, não identifica diretamente todas as substâncias." },
+  },
+  jupiter: {
+    spectrometer: { title: "Nuvens e atmosfera profunda", summary: "Hidrogênio e hélio dominam; metano, amônia, água e outras espécies aparecem em menores quantidades.", rows: [{ label: "H₂", display: "~89,8%", level: 90 }, { label: "He", display: "~10,2%", level: 10 }, { label: "CH₄ + NH₃", display: "traços", level: 4 }], method: "A profundidade observada depende do comprimento de onda e da opacidade das nuvens." },
+    microscope: { title: "Aerossóis das nuvens", summary: "Não existe amostra de solo: a sonda examina gotículas, cristais e partículas suspensas em camadas atmosféricas.", rows: [{ label: "Cristais de amônia", display: "camadas altas", level: 68 }, { label: "Água", display: "nuvens profundas", level: 36 }], method: "É uma leitura de partículas atmosféricas; Júpiter não tem superfície sólida convencional." },
+    seismic: { title: "Oscilações e interior", summary: "Sem pouso sólido, o interior é estimado por gravidade, campo magnético, ondas atmosféricas e modelos de alta pressão.", rows: [{ label: "Envelope molecular", display: "externo", level: 35 }, { label: "H metálico", display: "profundo", level: 72 }, { label: "Núcleo diluído", display: "modelo", level: 54 }], method: "O gráfico representa camadas estimadas; fronteiras reais podem ser graduais." },
+    magnetic: { title: "Magnetosfera gigante", summary: "O campo de Júpiter é o mais forte entre os planetas do Sistema Solar e cria regiões de radiação extrema.", rows: [{ label: "Intensidade equatorial", display: "~4,3 gauss", level: 86 }, { label: "Radiação local", display: "extrema", level: 96 }], method: "A intensidade varia muito com posição e tempo; o valor é uma referência aproximada." },
+  },
+  kepler: {
+    spectrometer: { title: "Atmosfera ainda desconhecida", summary: "Não há espectro atmosférico confirmado de Kepler-186f. Qualquer composição exibida como gás específico seria especulação.", rows: [{ label: "Raio planetário", display: "observado", level: 74 }, { label: "Atmosfera", display: "sem detecção", level: 0 }], method: "Trânsitos medem principalmente o tamanho relativo; espectroscopia exigiria sinal muito mais detalhado." },
+    microscope: { title: "Sem amostra disponível", summary: "Nenhuma nave visitou este sistema. Superfície, minerais e possíveis oceanos permanecem desconhecidos.", rows: [{ label: "Amostra física", display: "inexistente", level: 0 }, { label: "Modelo rochoso", display: "possível", level: 28 }], method: "A tela evita transformar ilustrações de exoplanetas em dados observados." },
+    seismic: { title: "Interior não medido", summary: "Massa e estrutura interna não foram medidas diretamente; modelos dependem de composição e história de formação assumidas.", rows: [{ label: "Massa", display: "não medida", level: 0 }, { label: "Estrutura", display: "hipotética", level: 12 }], method: "Sem massa e resposta sísmica, qualquer camada interna é apenas um cenário de hipótese." },
+    magnetic: { title: "Campo magnético desconhecido", summary: "Não existe detecção do campo magnético de Kepler-186f nem medição direta do vento estelar no planeta.", rows: [{ label: "Campo planetário", display: "desconhecido", level: 0 }, { label: "Proteção atmosférica", display: "não determinada", level: 0 }], method: "Ausência de dado não significa campo ausente; significa que ainda não conseguimos medi-lo." },
+  },
+};
 
 export function PlanetSurvey({ initialPlanet, mode, onClose }: { initialPlanet: PlanetRecord; mode: GameProfile["ageBand"]; onClose: () => void }) {
   const [planet, setPlanet] = useState(initialPlanet);
-  const [activeTool, setActiveTool] = useState("spectrometer");
+  const [activeTool, setActiveTool] = useState<ToolId>("spectrometer");
   const evidence = evidenceLabels[planet.evidence];
+  const instrumentReading = instrumentReadings[planet.id][activeTool];
 
   return (
     <section className="planet-survey" aria-labelledby="planet-title">
@@ -51,6 +81,7 @@ export function PlanetSurvey({ initialPlanet, mode, onClose }: { initialPlanet: 
 
         <div className="survey-content">
           <div className="survey-heading"><div><p className="eyebrow">Leitura do {tools.find((tool) => tool.id === activeTool)?.label}</p><h2>Composição e ambiente</h2></div><span className="live-reading"><i /> leitura concluída</span></div>
+          <section className="instrument-reading-card" key={`${planet.id}-${activeTool}`} aria-labelledby="instrument-reading-title"><div className="instrument-reading-head"><div><small>LEITURA INSTRUMENTAL ESPECÍFICA</small><h3 id="instrument-reading-title">{instrumentReading.title}</h3></div><span>{tools.find((tool) => tool.id === activeTool)?.icon}</span></div><p>{instrumentReading.summary}</p><div className="instrument-bars">{instrumentReading.rows.map((row) => <div key={row.label}><span><b>{row.label}</b><small>{row.display}</small></span><meter min="0" max="100" value={row.level}>{row.level}%</meter></div>)}</div><div className="instrument-method"><strong>Como o instrumento sabe?</strong><p>{instrumentReading.method}</p></div></section>
           <div className="environment-grid">
             <article><span>g</span><small>Gravidade</small><strong>{planet.gravity}</strong></article>
             <article><span>°</span><small>Temperatura</small><strong>{planet.temperature}</strong></article>

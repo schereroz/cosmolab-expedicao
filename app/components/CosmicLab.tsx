@@ -5,6 +5,7 @@ import { celestialBodies, evidenceLabels } from "../data";
 import { formatScientific, simulateCollision } from "../lib/science";
 import type { CollisionResult, GameProfile } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
+import { CollisionTelemetry } from "./CollisionTelemetry";
 import { SciencePassport } from "./SciencePassport";
 
 const guidedScenarios = [
@@ -141,6 +142,7 @@ export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
           ) : (
             <div className="empty-result"><span>↗</span><div><strong>Pronto para calcular</strong><p>Ajuste os parâmetros e inicie a simulação. Os astros originais nunca são alterados.</p></div></div>
           )}
+          {result && <CollisionTelemetry projectile={projectile} target={target} speed={speed} angle={angle} result={result} />}
 
           <section className="frontier-catalog" aria-labelledby="frontier-title">
             <div><p className="eyebrow">Fronteiras da ciência</p><h2 id="frontier-title">Objetos extremos e hipotéticos</h2><p>Compare o que foi observado com ideias que ainda estão sendo investigadas.</p></div>

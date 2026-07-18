@@ -64,3 +64,14 @@ test("changes scientific depth with the learning profile", async () => {
   assert.match(matter, /Distribuição eletrônica simplificada/);
   assert.match(matter, /MODO PESQUISADOR/);
 });
+
+test("renders quantitative collision telemetry and instrument-specific surveys", async () => {
+  const telemetry = await readFile(new URL("../app/components/CollisionTelemetry.tsx", import.meta.url), "utf8");
+  const science = await readFile(new URL("../app/lib/science.ts", import.meta.url), "utf8");
+  const survey = await readFile(new URL("../app/components/PlanetSurvey.tsx", import.meta.url), "utf8");
+  assert.match(telemetry, /Telemetria do encontro/);
+  assert.match(science, /buildEncounterTelemetry/);
+  assert.match(science, /Integração newtoniana simplificada/);
+  for (const tool of ["spectrometer", "microscope", "seismic", "magnetic"]) assert.match(survey, new RegExp(`${tool}:`));
+  assert.match(survey, /LEITURA INSTRUMENTAL ESPECÍFICA/);
+});
