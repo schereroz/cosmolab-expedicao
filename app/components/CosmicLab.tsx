@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { celestialBodies, evidenceLabels } from "../data";
 import { formatScientific, simulateCollision } from "../lib/science";
 import type { CollisionResult, GameProfile } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
 import { CollisionTelemetry } from "./CollisionTelemetry";
-import { CollisionScene3D } from "./CollisionScene3D";
+
+const CollisionScene3D = dynamic(() => import("./CollisionScene3D").then((module) => module.CollisionScene3D), { ssr: false, loading: () => <div className="collision-3d-stage simulation-loading" role="status">Carregando simulador físico 3D…</div> });
 import { SciencePassport } from "./SciencePassport";
 
 const guidedScenarios = [

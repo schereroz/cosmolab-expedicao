@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { missions, planets } from "../data";
 import type { GameProfile, PlanetRecord, ViewId } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
-import { SpaceFlightExperience } from "./SpaceFlightExperience";
+
+const SpaceFlightExperience = dynamic(() => import("./SpaceFlightExperience").then((module) => module.SpaceFlightExperience), { ssr: false, loading: () => <div className="simulation-loading" role="status">Preparando cabine 3D…</div> });
 
 interface WorldViewProps {
   profile: GameProfile;
