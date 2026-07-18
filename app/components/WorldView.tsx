@@ -2,6 +2,7 @@
 
 import { planets } from "../data";
 import type { PlanetRecord, ViewId } from "../types";
+import { ActivityGuide } from "./ActivityGuide";
 
 interface WorldViewProps {
   onNavigate: (view: ViewId) => void;
@@ -28,6 +29,7 @@ export function WorldView({ onNavigate, onPlanet }: WorldViewProps) {
           <span><i className="legend-locked" /> Em descoberta</span>
         </div>
       </div>
+      <ActivityGuide title="Mapa de exploração" goal="Escolher seu próximo destino científico." steps={["Veja as quatro regiões", "Escolha um laboratório", "Pouse em um planeta", "Volte ao mapa quando quiser"]} reward="Não existe ordem obrigatória: sua curiosidade cria a rota." />
 
       <div className="space-map">
         <div className="star-layer" aria-hidden="true" />

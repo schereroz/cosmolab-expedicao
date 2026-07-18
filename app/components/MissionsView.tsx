@@ -2,6 +2,7 @@
 
 import { evidenceLabels, missions } from "../data";
 import type { GameProfile } from "../types";
+import { ActivityGuide } from "./ActivityGuide";
 
 interface MissionsViewProps {
   profile: GameProfile;
@@ -16,6 +17,7 @@ export function MissionsView({ profile, onToggleTrail, onComplete }: MissionsVie
         <div><p className="eyebrow">16 missões principais · trilha personalizada</p><h1 id="missions-title">Painel de missões</h1><p>Escolha até oito desafios. Missões concluídas continuam disponíveis para repetir.</p></div>
         <div className="trail-counter"><strong>{profile.trail.length}</strong><span>/ 8 na trilha</span></div>
       </div>
+      <ActivityGuide title="Missões e trilhas" goal="Montar uma sequência de desafios e registrar descobertas no Diário Científico." steps={["Escolha uma região", "Adicione à trilha", "Realize o desafio", "Registre o resultado"]} reward="Cada missão rende XP e uma evidência nova no seu diário." />
       <div className="mission-regions">
         {["Vale Elemental", "Campo de Forças", "Biosfera Viva", "Oficina do Futuro"].map((region, regionIndex) => (
           <section className={`mission-region region-tone-${regionIndex + 1}`} key={region}>

@@ -47,6 +47,10 @@ export interface ElementRecord {
   mass: number;
   group: "nonmetal" | "metal" | "noble" | "metalloid";
   fact: string;
+  category: string;
+  period: number;
+  state: "sólido" | "líquido" | "gás" | "desconhecido";
+  use: string;
 }
 
 export interface PlanetRecord {
@@ -98,6 +102,8 @@ export interface CollisionResult {
   velocityMs: number;
   uncertainty: number;
   summary: string;
+  visualEffect: "impact" | "shatter" | "swallow" | "deflect" | "merge" | "beam" | "expel" | "portal" | "unknown";
+  affectedBody?: "projectile" | "target" | "both";
 }
 
 export interface GameProfile {

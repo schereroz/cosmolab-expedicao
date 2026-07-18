@@ -41,32 +41,43 @@ export const missions: Mission[] = missionSeeds.map((mission, index) => ({
   locked: index > 7,
 }));
 
-export const elements: ElementRecord[] = [
-  { symbol: "H", name: "Hidrogênio", number: 1, mass: 1.008, group: "nonmetal", fact: "É o elemento mais abundante do Universo." },
-  { symbol: "He", name: "Hélio", number: 2, mass: 4.003, group: "noble", fact: "Quase não reage com outros elementos." },
-  { symbol: "Li", name: "Lítio", number: 3, mass: 6.94, group: "metal", fact: "É usado em muitas baterias recarregáveis." },
-  { symbol: "Be", name: "Berílio", number: 4, mass: 9.012, group: "metal", fact: "É leve, rígido e exige manuseio especializado." },
-  { symbol: "B", name: "Boro", number: 5, mass: 10.81, group: "metalloid", fact: "Ajuda a produzir vidros resistentes ao calor." },
-  { symbol: "C", name: "Carbono", number: 6, mass: 12.011, group: "nonmetal", fact: "Forma a base química da vida conhecida." },
-  { symbol: "N", name: "Nitrogênio", number: 7, mass: 14.007, group: "nonmetal", fact: "Compõe cerca de 78% do ar da Terra." },
-  { symbol: "O", name: "Oxigênio", number: 8, mass: 15.999, group: "nonmetal", fact: "Participa da respiração e de combustões." },
-  { symbol: "F", name: "Flúor", number: 9, mass: 18.998, group: "nonmetal", fact: "É muito reativo quando está isolado." },
-  { symbol: "Ne", name: "Neônio", number: 10, mass: 20.18, group: "noble", fact: "Emite luz avermelhada em tubos elétricos." },
-  { symbol: "Na", name: "Sódio", number: 11, mass: 22.99, group: "metal", fact: "No sal de cozinha, aparece ligado ao cloro." },
-  { symbol: "Mg", name: "Magnésio", number: 12, mass: 24.305, group: "metal", fact: "É central na molécula de clorofila." },
-  { symbol: "Al", name: "Alumínio", number: 13, mass: 26.982, group: "metal", fact: "Combina baixa densidade e boa resistência." },
-  { symbol: "Si", name: "Silício", number: 14, mass: 28.085, group: "metalloid", fact: "É essencial em chips e comum em rochas." },
-  { symbol: "P", name: "Fósforo", number: 15, mass: 30.974, group: "nonmetal", fact: "Faz parte do DNA e do ATP." },
-  { symbol: "S", name: "Enxofre", number: 16, mass: 32.06, group: "nonmetal", fact: "Ocorre em minerais e proteínas." },
-  { symbol: "Cl", name: "Cloro", number: 17, mass: 35.45, group: "nonmetal", fact: "Forma cloretos quando ganha um elétron." },
-  { symbol: "Ar", name: "Argônio", number: 18, mass: 39.948, group: "noble", fact: "É um gás nobre presente no ar." },
-  { symbol: "K", name: "Potássio", number: 19, mass: 39.098, group: "metal", fact: "Íons de potássio ajudam células nervosas." },
-  { symbol: "Ca", name: "Cálcio", number: 20, mass: 40.078, group: "metal", fact: "Está em ossos, conchas e muitos minerais." },
-  { symbol: "Fe", name: "Ferro", number: 26, mass: 55.845, group: "metal", fact: "Transporta oxigênio na hemoglobina." },
-  { symbol: "Cu", name: "Cobre", number: 29, mass: 63.546, group: "metal", fact: "Conduz eletricidade com eficiência." },
-  { symbol: "Zn", name: "Zinco", number: 30, mass: 65.38, group: "metal", fact: "Protege o aço contra corrosão." },
-  { symbol: "Ag", name: "Prata", number: 47, mass: 107.868, group: "metal", fact: "É o melhor condutor elétrico entre os metais." },
+const elementSeeds: Array<[string, string, number]> = [
+  ["H","Hidrogênio",1.008],["He","Hélio",4.003],["Li","Lítio",6.94],["Be","Berílio",9.012],["B","Boro",10.81],["C","Carbono",12.011],["N","Nitrogênio",14.007],["O","Oxigênio",15.999],["F","Flúor",18.998],["Ne","Neônio",20.180],
+  ["Na","Sódio",22.990],["Mg","Magnésio",24.305],["Al","Alumínio",26.982],["Si","Silício",28.085],["P","Fósforo",30.974],["S","Enxofre",32.06],["Cl","Cloro",35.45],["Ar","Argônio",39.948],["K","Potássio",39.098],["Ca","Cálcio",40.078],
+  ["Sc","Escândio",44.956],["Ti","Titânio",47.867],["V","Vanádio",50.942],["Cr","Cromo",51.996],["Mn","Manganês",54.938],["Fe","Ferro",55.845],["Co","Cobalto",58.933],["Ni","Níquel",58.693],["Cu","Cobre",63.546],["Zn","Zinco",65.38],
+  ["Ga","Gálio",69.723],["Ge","Germânio",72.630],["As","Arsênio",74.922],["Se","Selênio",78.971],["Br","Bromo",79.904],["Kr","Criptônio",83.798],["Rb","Rubídio",85.468],["Sr","Estrôncio",87.62],["Y","Ítrio",88.906],["Zr","Zircônio",91.224],
+  ["Nb","Nióbio",92.906],["Mo","Molibdênio",95.95],["Tc","Tecnécio",98],["Ru","Rutênio",101.07],["Rh","Ródio",102.906],["Pd","Paládio",106.42],["Ag","Prata",107.868],["Cd","Cádmio",112.414],["In","Índio",114.818],["Sn","Estanho",118.710],
+  ["Sb","Antimônio",121.760],["Te","Telúrio",127.60],["I","Iodo",126.904],["Xe","Xenônio",131.293],["Cs","Césio",132.905],["Ba","Bário",137.327],["La","Lantânio",138.905],["Ce","Cério",140.116],["Pr","Praseodímio",140.908],["Nd","Neodímio",144.242],
+  ["Pm","Promécio",145],["Sm","Samário",150.36],["Eu","Európio",151.964],["Gd","Gadolínio",157.25],["Tb","Térbio",158.925],["Dy","Disprósio",162.500],["Ho","Hólmio",164.930],["Er","Érbio",167.259],["Tm","Túlio",168.934],["Yb","Itérbio",173.045],
+  ["Lu","Lutécio",174.967],["Hf","Háfnio",178.49],["Ta","Tântalo",180.948],["W","Tungstênio",183.84],["Re","Rênio",186.207],["Os","Ósmio",190.23],["Ir","Irídio",192.217],["Pt","Platina",195.084],["Au","Ouro",196.967],["Hg","Mercúrio",200.592],
+  ["Tl","Tálio",204.38],["Pb","Chumbo",207.2],["Bi","Bismuto",208.980],["Po","Polônio",209],["At","Astato",210],["Rn","Radônio",222],["Fr","Frâncio",223],["Ra","Rádio",226],["Ac","Actínio",227],["Th","Tório",232.038],
+  ["Pa","Protactínio",231.036],["U","Urânio",238.029],["Np","Netúnio",237],["Pu","Plutônio",244],["Am","Amerício",243],["Cm","Cúrio",247],["Bk","Berquélio",247],["Cf","Califórnio",251],["Es","Einstênio",252],["Fm","Férmio",257],
+  ["Md","Mendelévio",258],["No","Nobélio",259],["Lr","Laurêncio",266],["Rf","Rutherfórdio",267],["Db","Dúbnio",268],["Sg","Seabórgio",269],["Bh","Bóhrio",270],["Hs","Hássio",269],["Mt","Meitnério",278],["Ds","Darmstádtio",281],
+  ["Rg","Roentgênio",282],["Cn","Copernício",285],["Nh","Nihônio",286],["Fl","Fleróvio",289],["Mc","Moscóvio",290],["Lv","Livermório",293],["Ts","Tenessino",294],["Og","Oganessônio",294],
 ];
+
+const nobleNumbers = new Set([2, 10, 18, 36, 54, 86, 118]);
+const metalloidNumbers = new Set([5, 14, 32, 33, 51, 52, 84]);
+const nonmetalNumbers = new Set([1, 6, 7, 8, 9, 15, 16, 17, 34, 35, 53, 85, 117]);
+const gasNumbers = new Set([1, 2, 7, 8, 9, 10, 17, 18, 36, 54, 86]);
+const liquidNumbers = new Set([35, 80]);
+const factOverrides: Record<string, string> = {
+  H: "É o elemento mais abundante do Universo e alimenta as estrelas.", C: "Suas ligações variadas formam a base química da vida conhecida.", N: "Compõe cerca de 78% do ar da Terra.", O: "Participa da respiração celular e de muitas combustões.", Na: "No sal de cozinha, aparece como íon ligado ao cloreto.", Mg: "Ocupa o centro da molécula de clorofila.", Si: "É comum nas rochas e essencial em chips.", P: "Faz parte do DNA, do ATP e das membranas celulares.", Fe: "Está no núcleo terrestre e ajuda a hemoglobina a transportar oxigênio.", Cu: "Conduz eletricidade com eficiência.", Nb: "O Brasil possui grandes reservas; suas ligas suportam condições extremas.", Ag: "É o melhor condutor elétrico entre os metais.", Au: "É pouco reativo e pode ser encontrado na forma metálica.", U: "Seus isótopos ajudam a estudar radioatividade e energia nuclear.", Og: "Foi produzido átomo por átomo; suas propriedades ainda são pouco conhecidas.",
+};
+
+function periodFor(number: number) {
+  return number <= 2 ? 1 : number <= 10 ? 2 : number <= 18 ? 3 : number <= 36 ? 4 : number <= 54 ? 5 : number <= 86 ? 6 : 7;
+}
+
+export const elements: ElementRecord[] = elementSeeds.map(([symbol, name, mass], index) => {
+  const number = index + 1;
+  const group = nobleNumbers.has(number) ? "noble" : metalloidNumbers.has(number) ? "metalloid" : nonmetalNumbers.has(number) ? "nonmetal" : "metal";
+  const category = number >= 57 && number <= 71 ? "Lantanídeo" : number >= 89 && number <= 103 ? "Actinídeo" : group === "noble" ? "Gás nobre" : group === "metalloid" ? "Semimetal" : group === "nonmetal" ? "Não metal" : number > 92 ? "Elemento sintético" : "Metal";
+  const state = number > 108 ? "desconhecido" : gasNumbers.has(number) ? "gás" : liquidNumbers.has(number) ? "líquido" : "sólido";
+  const fact = factOverrides[symbol] ?? (number > 92 ? "É produzido artificialmente e estudado em quantidades minúsculas." : group === "noble" ? "Sua camada eletrônica externa completa reduz sua reatividade." : group === "metal" ? "Seus elétrons podem se mover ou ser compartilhados em ligações metálicas." : "Pode formar ligações covalentes ao compartilhar elétrons.");
+  const use = number > 92 ? "Pesquisa sobre núcleos atômicos e os limites da tabela periódica." : group === "noble" ? "Iluminação, atmosferas controladas ou pesquisa, conforme o elemento." : group === "metal" ? "Materiais, ligas, eletrônica ou processos biológicos, conforme o elemento." : "Moléculas, minerais, vida ou tecnologia, conforme suas ligações.";
+  return { symbol, name, number, mass, group, fact, category, period: periodFor(number), state, use };
+});
 
 export const planets: PlanetRecord[] = [
   {

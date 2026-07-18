@@ -22,33 +22,71 @@ export function simulateCollision(
 
   let outcome: CollisionResult["outcome"];
   let summary: string;
+  let visualEffect: CollisionResult["visualEffect"] = "impact";
+  let affectedBody: CollisionResult["affectedBody"] = "both";
+  const smallerBody = projectile.massKg <= target.massKg ? projectile : target;
+  const smallerSide = projectile.massKg <= target.massKg ? "projectile" : "target";
+  const massRatio = Math.max(projectile.massKg, target.massKg) / Math.max(1, Math.min(projectile.massKg, target.massKg));
 
-  if ([projectile.kind, target.kind].some((kind) => ["buraco-branco", "minhoca", "gravastar", "fuzzball"].includes(kind))) {
+  if (projectile.kind === "buraco-negro" || target.kind === "buraco-negro") {
+    const blackHole = projectile.kind === "buraco-negro" ? projectile : target;
+    const capturedBody = projectile.kind === "buraco-negro" ? target : projectile;
+    if (angleDegrees > 76 && speedRatio > 1.2) {
+      outcome = "Desvio";
+      visualEffect = "deflect";
+      affectedBody = "projectile";
+      summary = "A trajetória rasante é curvada pela gravidade extrema e o objeto escapa no modelo. Perto de um buraco negro real, seria necessário calcular relatividade geral.";
+    } else {
+      outcome = "Captura orbital";
+      visualEffect = "swallow";
+      affectedBody = projectile.kind === "buraco-negro" ? "target" : "projectile";
+      summary = `${capturedBody.name} cruza o horizonte de eventos de ${blackHole.name} e deixa de conseguir retornar. Para quem observa de longe, sua luz enfraqueceria e ficaria mais avermelhada.`;
+    }
+  } else if (target.kind === "buraco-branco") {
     outcome = "Interação hipotética";
-    summary = `Não existe evidência suficiente para prever esta interação com ${target.name}. O resultado é uma exploração teórica, não uma previsão.`;
+    visualEffect = "expel";
+    affectedBody = "projectile";
+    summary = "No conceito matemático de buraco branco, matéria não entraria e seria expelida. Nenhum buraco branco foi observado: esta animação é uma hipótese visual.";
+  } else if (target.kind === "minhoca") {
+    outcome = "Interação hipotética";
+    visualEffect = "portal";
+    affectedBody = "projectile";
+    summary = "O objeto atravessa o portal apenas na narrativa. Buracos de minhoca atravessáveis não foram observados e talvez nem sejam fisicamente estáveis.";
+  } else if ([projectile.kind, target.kind].some((kind) => ["gravastar", "fuzzball"].includes(kind))) {
+    outcome = "Interação hipotética";
+    visualEffect = "unknown";
+    summary = `Não existe evidência suficiente para prever esta interação com ${target.name}. O brilho instável indica incerteza do modelo, não um resultado observado.`;
   } else if (projectile.kind === "laser") {
     outcome = "Impacto";
+    visualEffect = "beam";
+    affectedBody = "target";
     summary = "O pulso deposita energia na camada externa do alvo. O dispositivo e sua potência são inteiramente ficcionais.";
   } else if (projectile.kind === "bomba-virtual") {
     outcome = "Fragmentação";
+    visualEffect = "shatter";
+    affectedBody = "target";
     summary = "A carga virtual transfere a energia definida pelo cenário. Nenhum material, mecanismo ou instrução real é modelado.";
-  } else if (target.kind === "buraco-negro") {
-    outcome = angleDegrees > 68 && speedRatio > 1 ? "Desvio" : "Captura orbital";
-    summary = outcome === "Desvio" ? "O objeto passa em uma trajetória rasante no modelo newtoniano simplificado." : "O objeto cruza a região de captura representada pelo modelo; efeitos relativísticos detalhados não são calculados.";
   } else if (angleDegrees > 72 && speedRatio > 1.15) {
     outcome = "Desvio";
+    visualEffect = "deflect";
+    affectedBody = "both";
     summary = "O encontro é rasante: os corpos trocam energia e seguem trajetórias diferentes.";
   } else if (speedRatio < 0.72) {
     outcome = "Captura orbital";
+    visualEffect = "merge";
     summary = "A velocidade relativa é baixa o bastante para uma captura aproximada pelo modelo.";
-  } else if (specificEnergy > 4e7 && angleFactor > 0.45) {
+  } else if ((specificEnergy > 4e7 || massRatio > 20) && angleFactor > 0.35) {
     outcome = "Fragmentação";
-    summary = "A energia específica supera o limite educativo de fragmentação do corpo-alvo.";
+    visualEffect = "shatter";
+    affectedBody = smallerSide;
+    summary = `${smallerBody.name}, o corpo de menor massa, é fragmentado e parte do material é aquecida ou ejetada. A quantidade real de fragmentos dependeria da composição e estrutura internas.`;
   } else if (speedRatio < 1.2) {
     outcome = "Fusão parcial";
+    visualEffect = "merge";
     summary = "Parte do material pode se unir; outra parte é aquecida e ejetada.";
   } else {
     outcome = "Impacto";
+    visualEffect = "impact";
     summary = "O projétil atinge a superfície e transfere energia para calor, deformação e ejeção.";
   }
 
@@ -59,6 +97,8 @@ export function simulateCollision(
     velocityMs,
     uncertainty: Math.round(12 + Math.min(28, speedRatio * 6)),
     summary,
+    visualEffect,
+    affectedBody,
   };
 }
 

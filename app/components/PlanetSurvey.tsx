@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { evidenceLabels, planets } from "../data";
 import type { PlanetRecord } from "../types";
+import { ActivityGuide } from "./ActivityGuide";
 import { SciencePassport } from "./SciencePassport";
 
 const tools = [
@@ -33,6 +34,8 @@ export function PlanetSurvey({ initialPlanet, onClose }: { initialPlanet: Planet
           {planets.map((item) => <button key={item.id} className={item.id === planet.id ? "active" : ""} onClick={() => setPlanet(item)}>{item.name}</button>)}
         </div>
       </div>
+
+      <div className="planet-guide"><ActivityGuide title="Análise planetária" goal="Usar instrumentos para separar o que foi medido, inferido ou ainda é desconhecido." steps={["Escolha um mundo", "Ative um instrumento", "Compare ambiente e materiais", "Confira as fontes"]} reward="Explique se o ambiente poderia sustentar vida conhecida sem afirmar além dos dados." /></div>
 
       <div className="survey-body">
         <aside className="instrument-panel">
