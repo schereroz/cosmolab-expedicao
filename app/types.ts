@@ -127,6 +127,9 @@ export interface GameProfile {
   completed: string[];
   trail: string[];
   discoveries: string[];
+  streak: number;
+  lastActiveDate: string;
+  badges: string[];
 }
 
 export interface UapCase {

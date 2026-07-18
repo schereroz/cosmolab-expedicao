@@ -1,10 +1,11 @@
 "use client";
 
-import { planets } from "../data";
-import type { PlanetRecord, ViewId } from "../types";
+import { missions, planets } from "../data";
+import type { GameProfile, PlanetRecord, ViewId } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
 
 interface WorldViewProps {
+  profile: GameProfile;
   onNavigate: (view: ViewId) => void;
   onPlanet: (planet: PlanetRecord) => void;
 }
@@ -16,7 +17,10 @@ const regions = [
   { id: "tech", name: "Oficina do Futuro", subtitle: "Tecnologia & energia", icon: "⌘", className: "region-tech", view: "missions" as ViewId },
 ];
 
-export function WorldView({ onNavigate, onPlanet }: WorldViewProps) {
+export function WorldView({ profile, onNavigate, onPlanet }: WorldViewProps) {
+  const dailyIndex = [...(profile.lastActiveDate || "cosmolab")].reduce((total, character) => total + character.charCodeAt(0), 0) % missions.length;
+  const dailyMission = missions[dailyIndex];
+  const dailyCompleted = profile.completed.includes(dailyMission.id);
   return (
     <section className="world-view" aria-labelledby="world-title">
       <div className="world-heading">
@@ -30,6 +34,8 @@ export function WorldView({ onNavigate, onPlanet }: WorldViewProps) {
         </div>
       </div>
       <ActivityGuide title="Mapa de exploração" goal="Escolher seu próximo destino científico." steps={["Veja as quatro regiões", "Escolha um laboratório", "Pouse em um planeta", "Volte ao mapa quando quiser"]} reward="Não existe ordem obrigatória: sua curiosidade cria a rota." />
+
+      <section className="daily-dashboard" aria-label="Progresso diário"><div className="daily-mission"><div><p className="eyebrow">Expedição do dia</p><h2>{dailyMission.title}</h2><p>{dailyMission.description}</p></div><span><small>RECOMPENSA</small><strong>+{dailyMission.xp} XP</strong></span><button className={dailyCompleted ? "secondary-button" : "primary-button"} onClick={() => onNavigate("missions")}>{dailyCompleted ? "Revisitar missão" : "Abrir no painel"}</button></div><div className="streak-card"><small>Sequência científica</small><strong>{profile.streak || 1} dias</strong><p>Volte, experimente e registre ao menos uma observação por dia.</p><div className="streak-week">{Array.from({ length: 7 }, (_, index) => <i className={index < Math.min(7, profile.streak || 1) ? "active" : ""} key={index}><span>{index + 1}</span></i>)}</div></div></section>
 
       <div className="space-map">
         <div className="star-layer" aria-hidden="true" />

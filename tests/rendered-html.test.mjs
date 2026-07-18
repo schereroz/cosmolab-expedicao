@@ -75,3 +75,16 @@ test("renders quantitative collision telemetry and instrument-specific surveys",
   for (const tool of ["spectrometer", "microscope", "seismic", "magnetic"]) assert.match(survey, new RegExp(`${tool}:`));
   assert.match(survey, /LEITURA INSTRUMENTAL ESPECÍFICA/);
 });
+
+test("supports safe study streaks, achievements, and discovery sharing", async () => {
+  const shell = await readFile(new URL("../app/components/CosmoApp.tsx", import.meta.url), "utf8");
+  const world = await readFile(new URL("../app/components/WorldView.tsx", import.meta.url), "utf8");
+  const journal = await readFile(new URL("../app/components/JournalView.tsx", import.meta.url), "utf8");
+  assert.match(shell, /lastActiveDate/);
+  assert.match(shell, /<progress max=\{250\}/);
+  assert.match(world, /Expedição do dia/);
+  assert.match(world, /Sequência científica/);
+  assert.match(journal, /navigator\.share/);
+  assert.match(journal, /sem nome ou dado pessoal/i);
+  assert.match(journal, /Medalhas científicas/);
+});

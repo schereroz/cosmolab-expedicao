@@ -4,6 +4,10 @@ import { useState } from "react";
 import { avatars } from "../data";
 import type { GameProfile } from "../types";
 
+function localDateKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export function Onboarding({ onComplete }: { onComplete: (profile: GameProfile) => void }) {
   const [step, setStep] = useState<"profile" | "tour">("profile");
   const [nickname, setNickname] = useState("Luna");
@@ -24,6 +28,9 @@ export function Onboarding({ onComplete }: { onComplete: (profile: GameProfile) 
       completed: ["mission-1", "mission-5"],
       trail: ["mission-2", "mission-6"],
       discoveries: ["A água é polar", "Órbitas são quedas contínuas"],
+      streak: 1,
+      lastActiveDate: localDateKey(),
+      badges: ["primeira-descoberta"],
     });
   }
 

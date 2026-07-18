@@ -21,6 +21,9 @@ const demoProfile: GameProfile = {
   completed: ["mission-1", "mission-5"],
   trail: ["mission-2", "mission-6"],
   discoveries: ["A água é polar", "Órbitas são quedas contínuas"],
+  streak: 3,
+  lastActiveDate: localDateKey(),
+  badges: ["primeira-descoberta"],
 };
 
 const navItems: Array<{ id: ViewId; label: string; icon: string }> = [
@@ -31,6 +34,23 @@ const navItems: Array<{ id: ViewId; label: string; icon: string }> = [
   { id: "uap", label: "Arquivo UAP", icon: "?" },
   { id: "journal", label: "Diário", icon: "▤" },
 ];
+
+function localDateKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function unlockBadges(completedCount: number, streak: number) {
+  return [completedCount >= 1 && "primeira-descoberta", completedCount >= 4 && "quatro-regioes", completedCount >= 8 && "cientista-orbital", completedCount >= 16 && "mestre-cosmolab", streak >= 3 && "sequencia-3", streak >= 7 && "sequencia-7"].filter(Boolean) as string[];
+}
+
+function registerDailyVisit(profile: GameProfile): GameProfile {
+  const today = localDateKey();
+  if (profile.lastActiveDate === today) return { ...profile, badges: Array.from(new Set([...(profile.badges ?? []), ...unlockBadges(profile.completed.length, profile.streak ?? 1)])) };
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const streak = profile.lastActiveDate === localDateKey(yesterday) ? (profile.streak ?? 0) + 1 : 1;
+  return { ...profile, streak, lastActiveDate: today, badges: Array.from(new Set([...(profile.badges ?? []), ...unlockBadges(profile.completed.length, streak)])) };
+}
 
 export function CosmoApp() {
   const [view, setView] = useState<ViewId>("universe");
@@ -48,7 +68,7 @@ export function CosmoApp() {
       try {
         const storedProfile = JSON.parse(stored) as GameProfile;
         window.setTimeout(() => {
-          setProfile(storedProfile);
+          setProfile(registerDailyVisit(storedProfile));
           setShowOnboarding(false);
         }, 0);
       } catch {
@@ -65,7 +85,7 @@ export function CosmoApp() {
       .then((response) => response.ok ? response.json() : null)
       .then((payload) => {
         if (payload?.profile && !stored) {
-          setProfile(payload.profile as GameProfile);
+          setProfile(registerDailyVisit(payload.profile as GameProfile));
           setShowOnboarding(false);
         }
       })
@@ -99,7 +119,7 @@ export function CosmoApp() {
   const trailMissions = useMemo(() => missions.filter((mission) => profile.trail.includes(mission.id)), [profile.trail]);
 
   function finishOnboarding(nextProfile: GameProfile) {
-    setProfile(nextProfile);
+    setProfile(registerDailyVisit(nextProfile));
     setShowOnboarding(false);
     setToast(`Bem-vindo à tripulação, ${nextProfile.nickname}!`);
   }
@@ -118,13 +138,10 @@ export function CosmoApp() {
   function completeMission(id: string) {
     const mission = missions.find((item) => item.id === id);
     if (!mission || profile.completed.includes(id)) return;
-    setProfile((current) => ({
-      ...current,
-      xp: current.xp + mission.xp,
-      completed: [...current.completed, id],
-      trail: current.trail.filter((item) => item !== id),
-      discoveries: [...current.discoveries, `Missão “${mission.title}” concluída com evidências registradas`],
-    }));
+    setProfile((current) => {
+      const completed = [...current.completed, id];
+      return { ...current, xp: current.xp + mission.xp, completed, trail: current.trail.filter((item) => item !== id), discoveries: [...current.discoveries, `Missão “${mission.title}” concluída com evidências registradas`], badges: Array.from(new Set([...(current.badges ?? []), ...unlockBadges(completed.length, current.streak ?? 1)])) };
+    });
     setToast(`Descoberta registrada: +${mission.xp} XP`);
   }
 
@@ -133,8 +150,8 @@ export function CosmoApp() {
     if (view === "matter") return <MatterLab mode={profile.ageBand} />;
     if (view === "cosmic") return <CosmicLab mode={profile.ageBand} />;
     if (view === "uap") return <UapArchive mode={profile.ageBand} />;
-    if (view === "journal") return <JournalView profile={profile} />;
-    return <WorldView onNavigate={setView} onPlanet={setPlanet} />;
+    if (view === "journal") return <JournalView profile={profile} onOpenProfile={() => setShowSettings(true)} />;
+    return <WorldView profile={profile} onNavigate={setView} onPlanet={setPlanet} />;
   }
 
   return (
@@ -148,7 +165,7 @@ export function CosmoApp() {
         <div className="profile-cluster">
           <button className="help-button" onClick={() => setShowHelp(true)} aria-label="Abrir guia de como jogar">?</button>
           <button className="trail-button" onClick={() => setShowTrail((value) => !value)} aria-expanded={showTrail}><span>◇</span><b>{profile.trail.length}</b><small>Trilha</small></button>
-          <div className="xp-cluster"><span>NÍVEL {level}</span><div><i className="xp-fill" /></div><small>{levelProgress}/250 XP</small></div>
+          <div className="xp-cluster"><span>NÍVEL {level}</span><progress max={250} value={levelProgress} aria-label={`${levelProgress} de 250 XP para o próximo nível`} /><small>{levelProgress}/250 XP</small></div>
           <button className="profile-button" onClick={() => setShowSettings(true)} aria-label="Abrir perfil de aprendizagem"><span className="profile-avatar">{avatar.emoji}</span><span><strong>{profile.nickname}</strong><small>{profile.ageBand === "explorer" ? "Explorador" : "Pesquisador"} · editar</small></span></button>
         </div>
       </header>
