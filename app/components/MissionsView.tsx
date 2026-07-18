@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { evidenceLabels, missions } from "../data";
-import type { GameProfile } from "../types";
+import type { GameProfile, Mission } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
+import { MissionRunner } from "./MissionRunner";
 
 interface MissionsViewProps {
   profile: GameProfile;
@@ -11,6 +13,7 @@ interface MissionsViewProps {
 }
 
 export function MissionsView({ profile, onToggleTrail, onComplete }: MissionsViewProps) {
+  const [activeMission, setActiveMission] = useState<Mission | null>(null);
   return (
     <section className="module-view missions-view" aria-labelledby="missions-title">
       <div className="module-header">
@@ -34,7 +37,7 @@ export function MissionsView({ profile, onToggleTrail, onComplete }: MissionsVie
                     {completed ? <span className="completed-badge">✓ Concluída</span> : (
                       <div className="mission-actions">
                         <button className={inTrail ? "in-trail" : ""} onClick={() => onToggleTrail(mission.id)}>{inTrail ? "✓ Na trilha" : "+ Trilha"}</button>
-                        <button className="start-mission" onClick={() => onComplete(mission.id)}>Concluir demo</button>
+                        <button className="start-mission" onClick={() => setActiveMission(mission)}>Iniciar missão</button>
                       </div>
                     )}
                   </article>
@@ -44,6 +47,7 @@ export function MissionsView({ profile, onToggleTrail, onComplete }: MissionsVie
           </section>
         ))}
       </div>
+      {activeMission && <MissionRunner mission={activeMission} mode={profile.ageBand} onClose={() => setActiveMission(null)} onComplete={() => { onComplete(activeMission.id); setActiveMission(null); }} />}
     </section>
   );
 }

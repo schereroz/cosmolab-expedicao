@@ -32,6 +32,19 @@ export interface Mission {
   locked?: boolean;
 }
 
+export interface MissionChallenge {
+  question: string;
+  choices: string[];
+  correctChoice: number;
+  variable: { label: string; min: number; max: number; step: number; start: number; unit: string; idealMin: number; idealMax: number };
+  lowResult: string;
+  idealResult: string;
+  highResult: string;
+  explanation: string;
+  researcherNote: string;
+  source: string;
+}
+
 export interface Avatar {
   id: string;
   name: string;

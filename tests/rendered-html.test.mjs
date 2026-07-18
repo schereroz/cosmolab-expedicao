@@ -43,3 +43,15 @@ test("keeps scientific evidence and child-safety language explicit", async () =>
   assert.match(uap, /Regra de ouro/);
   assert.match(shell, /Sem anúncios · sem chat/);
 });
+
+test("ships a playable investigation for every main mission", async () => {
+  const data = await readFile(new URL("../app/data.ts", import.meta.url), "utf8");
+  const runner = await readFile(new URL("../app/components/MissionRunner.tsx", import.meta.url), "utf8");
+  for (let index = 1; index <= 16; index += 1) {
+    assert.match(data, new RegExp(`"mission-${index}"\\s*:`), `mission-${index} should have a challenge`);
+  }
+  assert.match(runner, /Faça sua hipótese/);
+  assert.match(runner, /Testar hipótese/);
+  assert.match(runner, /O que os dados mostram/);
+  assert.doesNotMatch(runner, /Concluir demo/);
+});
