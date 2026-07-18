@@ -62,6 +62,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
   const pausedRef = useRef(false);
   const arrivedRef = useRef(false);
   const viewModeRef = useRef<FlightView>("cockpit");
+  const navigationAssistRef = useRef(true);
   const [destinationId, setDestinationId] = useState(initialDestination?.id ?? "mars");
   const [autopilot, setAutopilot] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -70,6 +71,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
   const [arrived, setArrived] = useState(false);
   const [speakerId, setSpeakerId] = useState(profile.avatarId);
   const [viewMode, setViewMode] = useState<FlightView>("cockpit");
+  const [alignment, setAlignment] = useState(0);
   const destination = useMemo(() => planets.find((planet) => planet.id === destinationId) ?? planets[0], [destinationId]);
   const speaker = avatars.find((avatar) => avatar.id === speakerId) ?? avatars[0];
 
@@ -112,7 +114,6 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
     scene.add(stars);
 
     const planetMeshes = new Map<string, THREE.Mesh>();
-    const destinationRings = new Map<string, THREE.Mesh>();
     planets.forEach((planet) => {
       const size = planet.id === "jupiter" ? 8 : planet.id === "kepler" ? 4.6 : 3.2;
       const material = new THREE.MeshStandardMaterial({ color: new THREE.Color(planet.color), roughness: 0.72, metalness: 0.05, emissive: new THREE.Color(planet.color).multiplyScalar(0.07) });
@@ -121,11 +122,6 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
       mesh.userData.radius = size;
       scene.add(mesh);
       planetMeshes.set(planet.id, mesh);
-      const destinationRing = new THREE.Mesh(new THREE.TorusGeometry(size + 1.7, 0.08, 12, 72), new THREE.MeshBasicMaterial({ color: 0x76d5d0, transparent: true, opacity: 0.72 }));
-      destinationRing.position.copy(mesh.position);
-      destinationRing.rotation.x = Math.PI / 2;
-      scene.add(destinationRing);
-      destinationRings.set(planet.id, destinationRing);
       if (planet.id === "jupiter") {
         const ring = new THREE.Mesh(new THREE.RingGeometry(10, 12.2, 64), new THREE.MeshBasicMaterial({ color: 0xd9c18c, transparent: true, opacity: 0.38, side: THREE.DoubleSide }));
         ring.position.copy(mesh.position);
@@ -183,21 +179,27 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
       if (pausedRef.current) { renderer.render(scene, camera); return; }
       const target = planetMeshes.get(destinationRef.current);
       if (!target) return;
-      destinationRings.forEach((ring, planetId) => { ring.visible = planetId === destinationRef.current; });
       targetDirection.copy(target.position).sub(ship.position);
       const currentDistance = targetDirection.length();
       targetDirection.normalize();
+      const arrivalRadius = Number(target.userData.radius) + 8;
       if (autopilotRef.current && !arrivedRef.current) {
         forward.lerp(targetDirection, Math.min(1, delta * 2.4)).normalize();
         ship.lookAt(ship.position.clone().sub(forward));
-        velocity.lerp(forward.clone().multiplyScalar(0.32), Math.min(1, delta * 1.2));
+        const approachSpeed = THREE.MathUtils.clamp((currentDistance - arrivalRadius) * 0.018, 0.055, 0.42);
+        velocity.lerp(forward.clone().multiplyScalar(approachSpeed), Math.min(1, delta * 1.8));
       } else {
         if (controlsRef.current.left) ship.rotateY(delta * 1.45);
         if (controlsRef.current.right) ship.rotateY(-delta * 1.45);
         forward.set(0, 0, -1).applyQuaternion(ship.quaternion).normalize();
-        if (controlsRef.current.thrust) velocity.addScaledVector(forward, delta * 0.31);
+        if (navigationAssistRef.current && !controlsRef.current.left && !controlsRef.current.right) {
+          forward.lerp(targetDirection, Math.min(1, delta * (currentDistance < 45 ? 1.15 : 0.52))).normalize();
+          ship.lookAt(ship.position.clone().sub(forward));
+        }
+        if (controlsRef.current.thrust) velocity.addScaledVector(forward, delta * 0.46);
         if (controlsRef.current.brake) velocity.multiplyScalar(Math.max(0.88, 1 - delta * 2.8));
-        velocity.clampLength(0, 0.46);
+        if (currentDistance < 32 && velocity.length() > 0.12) velocity.multiplyScalar(Math.max(0.9, 1 - delta * 1.6)); // Frenagem de aproximação
+        velocity.clampLength(0, 0.58);
       }
       if (!arrivedRef.current) ship.position.addScaledVector(velocity, delta * 60);
       const exhaustAttribute = exhaustGeometry.getAttribute("position") as THREE.BufferAttribute;
@@ -208,7 +210,6 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
         if (Number(exhaustAttribute.array[index]) > 15) exhaustAttribute.array[index] = 2.8 + random() * 1.5;
       }
       exhaustAttribute.needsUpdate = true;
-      const arrivalRadius = Number(target.userData.radius) + 5.2;
       if (currentDistance <= arrivalRadius && !arrivedRef.current) {
         arrivedRef.current = true;
         setArrived(true);
@@ -217,9 +218,8 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
       }
       stars.position.z += delta * velocity.length() * 4;
       if (!reduceMotion) target.rotation.y += delta * 0.08;
-      const targetRing = destinationRings.get(destinationRef.current);
-      if (targetRing) { targetRing.rotation.z += delta * 0.35; targetRing.scale.setScalar(1 + Math.sin(clock.elapsedTime * 2) * 0.04); }
       const inCockpit = viewModeRef.current === "cockpit";
+      ship.visible = !inCockpit;
       const cameraOffset = inCockpit ? new THREE.Vector3(0, 0.62, -0.42) : new THREE.Vector3(0, 5.2, 14);
       cameraTarget.copy(ship.position).add(cameraOffset.applyQuaternion(ship.quaternion));
       camera.position.lerp(cameraTarget, Math.min(1, delta * (inCockpit ? 7.5 : 3.4)));
@@ -233,6 +233,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
         telemetryElapsed = 0;
         setSpeed(Math.round(velocity.length() * 83_000));
         setDistance(Math.max(0, Math.round(currentDistance * 82_000)));
+        setAlignment(Math.max(0, Math.min(100, Math.round((forward.dot(targetDirection) + 1) * 50))));
       }
       renderer.render(scene, camera);
     };
@@ -266,7 +267,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
         <button className="flight-close" onClick={onClose} aria-label="Fechar simulador de voo">×</button>
       </header>
 
-      {viewMode === "cockpit" ? <CockpitHUD speakerId={speakerId} destinationName={destination.name} message={arrived ? `Chegamos à zona segura de ${destination.name}. Agora vamos observar antes de pousar.` : crewTips[speaker.id]} speed={speed} distance={distance} fuel={Math.max(18, 100 - Math.round(speed / 1_800))} autopilot={autopilot} arrived={arrived} onSpeakerChange={setSpeakerId} /> : <aside className="flight-crew-panel" aria-label="Comunicador da tripulação">
+      {viewMode === "cockpit" ? <CockpitHUD speakerId={speakerId} destinationName={destination.name} message={arrived ? `Chegamos à zona segura de ${destination.name}. Agora vamos observar antes de pousar.` : crewTips[speaker.id]} speed={speed} distance={distance} fuel={Math.max(18, 100 - Math.round(speed / 1_800))} alignment={alignment} autopilot={autopilot} arrived={arrived} onToggleAutopilot={() => setAutopilot((value) => !value)} onSpeakerChange={setSpeakerId} /> : <aside className="flight-crew-panel" aria-label="Comunicador da tripulação">
         <Image src="/cosmolab-crew-cockpit.png" alt="Panda, gorila, capivara, axolote, coruja e polvo astronautas dentro da nave" width={1672} height={941} priority />
         <div className="crew-message"><small>COMUNICADOR · {speaker.role}</small><strong>{speaker.name} na escuta</strong><p>{arrived ? `Chegamos à zona segura de ${destination.name}. Agora vamos observar antes de pousar.` : crewTips[speaker.id]}</p></div>
         <div className="crew-switcher" aria-label="Falar com a tripulação">{avatars.map((avatar) => <button key={avatar.id} className={speakerId === avatar.id ? "active" : ""} onClick={() => setSpeakerId(avatar.id)} aria-label={`Ouvir ${avatar.name}`}>{avatar.name}</button>)}</div>
@@ -287,7 +288,7 @@ export function SpaceFlightExperience({ profile, initialDestination, onClose, on
 
       <div className="flight-actions-panel">
         <p><kbd>W</kbd>/<kbd>↑</kbd> acelerar · <kbd>A</kbd>/<kbd>D</kbd> virar · <kbd>S</kbd>/<kbd>↓</kbd> frear</p>
-        {!arrived ? <button className="autopilot-button" onClick={() => setAutopilot((value) => !value)} aria-pressed={autopilot}>{autopilot ? "Desligar piloto automático" : "Piloto automático"}</button> : <button className="arrival-button" onClick={() => onArrive(destination)}>{destination.landingMode === "pouso" ? `Pousar em ${destination.name}` : `Lançar sonda em ${destination.name}`}</button>}
+        {!arrived ? viewMode === "chase" && <button className="autopilot-button" onClick={() => setAutopilot((value) => !value)} aria-pressed={autopilot}>{autopilot ? "Desligar piloto automático" : "Piloto automático"}</button> : <button className="arrival-button" onClick={() => onArrive(destination)}>{destination.landingMode === "pouso" ? `Pousar em ${destination.name}` : `Lançar sonda em ${destination.name}`}</button>}
       </div>
       <p className="flight-model-note">Escalas, velocidades e distâncias foram comprimidas para o jogo. A pilotagem demonstra inércia, aceleração e correção de trajetória; não reproduz uma missão real.</p>
     </div>

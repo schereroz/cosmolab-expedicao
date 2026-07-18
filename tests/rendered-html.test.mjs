@@ -127,6 +127,17 @@ test("starts the flight inside an interactive first-person cockpit", async () =>
   assert.match(cockpit, /aria-label=\{`Ouvir \$\{avatar\.name\} na cabine`\}/);
 });
 
+test("keeps the ship hull outside the cockpit and assists planetary approach", async () => {
+  const flight = await readFile(new URL("../app/components/SpaceFlightExperience.tsx", import.meta.url), "utf8");
+  const cockpit = await readFile(new URL("../app/components/CockpitHUD.tsx", import.meta.url), "utf8");
+  assert.match(flight, /ship\.visible = !inCockpit/);
+  assert.match(flight, /navigationAssistRef/);
+  assert.match(flight, /arrivalRadius.*\+ 8/);
+  assert.match(flight, /Frenagem de aproximação/);
+  assert.match(cockpit, /Alinhamento com a rota/);
+  assert.match(cockpit, /Iniciar rota assistida/);
+});
+
 test("turns missions and the matter lab into repeatable experiments", async () => {
   const runner = await readFile(new URL("../app/components/MissionRunner.tsx", import.meta.url), "utf8");
   const matter = await readFile(new URL("../app/components/MatterLab.tsx", import.meta.url), "utf8");
