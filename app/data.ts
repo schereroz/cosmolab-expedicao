@@ -96,12 +96,20 @@ export const planets: PlanetRecord[] = [
 ];
 
 export const celestialBodies: CelestialBody[] = [
-  { id: "earth", name: "Terra", kind: "planeta", massKg: 5.972e24, radiusM: 6.371e6, color: "#4c9ac7", atmosphere: true },
-  { id: "moon", name: "Lua", kind: "lua", massKg: 7.342e22, radiusM: 1.737e6, color: "#d5d2c8", atmosphere: false },
-  { id: "mars", name: "Marte", kind: "planeta", massKg: 6.417e23, radiusM: 3.39e6, color: "#c96d45", atmosphere: true },
-  { id: "ceres", name: "Ceres", kind: "asteroide", massKg: 9.383e20, radiusM: 4.73e5, color: "#a9a399", atmosphere: false },
-  { id: "halley", name: "Halley", kind: "cometa", massKg: 2.2e14, radiusM: 5.5e3, color: "#d8edf0", atmosphere: false },
-  { id: "theia", name: "Theia (hipótese)", kind: "planeta", massKg: 6.4e23, radiusM: 3.2e6, color: "#d8a56d", atmosphere: false },
+  { id: "earth", name: "Terra", kind: "planeta", massKg: 5.972e24, radiusM: 6.371e6, color: "#4c9ac7", atmosphere: true, evidence: "observed", description: "Planeta rochoso observado e medido." },
+  { id: "moon", name: "Lua", kind: "lua", massKg: 7.342e22, radiusM: 1.737e6, color: "#d5d2c8", atmosphere: false, evidence: "observed", description: "Satélite natural da Terra." },
+  { id: "mars", name: "Marte", kind: "planeta", massKg: 6.417e23, radiusM: 3.39e6, color: "#c96d45", atmosphere: true, evidence: "observed", description: "Planeta rochoso com atmosfera rarefeita." },
+  { id: "ceres", name: "Ceres", kind: "asteroide", massKg: 9.383e20, radiusM: 4.73e5, color: "#a9a399", atmosphere: false, evidence: "observed", description: "Planeta anão do cinturão de asteroides." },
+  { id: "halley", name: "Cometa Halley", kind: "cometa", massKg: 2.2e14, radiusM: 5.5e3, color: "#d8edf0", atmosphere: false, evidence: "observed", description: "Núcleo de gelo e poeira em órbita periódica." },
+  { id: "theia", name: "Theia", kind: "planeta", massKg: 6.4e23, radiusM: 3.2e6, color: "#d8a56d", atmosphere: false, evidence: "hypothesis", description: "Protoplaneta proposto na hipótese do grande impacto." },
+  { id: "black-hole", name: "Buraco negro estelar", kind: "buraco-negro", massKg: 1.989e31, radiusM: 2.95e4, color: "#050808", atmosphere: false, evidence: "observed", description: "Objeto compacto previsto pela relatividade e apoiado por múltiplas observações." },
+  { id: "white-hole", name: "Buraco branco", kind: "buraco-branco", massKg: 1.989e31, radiusM: 2.95e4, color: "#f4f0d8", atmosphere: false, evidence: "hypothesis", description: "Solução matemática idealizada sem evidência observacional confirmada." },
+  { id: "wormhole", name: "Buraco de minhoca", kind: "minhoca", massKg: 1e30, radiusM: 1e5, color: "#67b9a6", atmosphere: false, evidence: "hypothesis", description: "Atalho hipotético no espaço-tempo; estabilidade exigiria condições não demonstradas." },
+  { id: "gravastar", name: "Gravastar", kind: "gravastar", massKg: 1.989e31, radiusM: 3.2e4, color: "#d09f45", atmosphere: false, evidence: "hypothesis", description: "Modelo especulativo de objeto compacto alternativo a um buraco negro." },
+  { id: "fuzzball", name: "Fuzzball", kind: "fuzzball", massKg: 1.989e31, radiusM: 3e4, color: "#b76d53", atmosphere: false, evidence: "hypothesis", description: "Proposta da teoria das cordas para descrever microestados de buracos negros." },
+  { id: "laser", name: "Pulso laser orbital", kind: "laser", massKg: 1, radiusM: 1, color: "#77e0c0", atmosphere: false, evidence: "fiction", energyOverrideJ: 1e22, description: "Artefato virtual de energia; não representa um dispositivo construível." },
+  { id: "energy-bomb", name: "Bomba de energia virtual", kind: "bomba-virtual", massKg: 1e4, radiusM: 3, color: "#e2763e", atmosphere: false, evidence: "fiction", energyOverrideJ: 4e23, description: "Objeto inteiramente ficcional, sem materiais ou instruções de fabricação." },
+  { id: "ufo", name: "OVNI simulado", kind: "ovni", massKg: 2e5, radiusM: 12, color: "#b9d6cf", atmosphere: false, evidence: "fiction", description: "Veículo narrativo inventado; OVNI significa apenas objeto não identificado." },
 ];
 
 export const uapCases: UapCase[] = [

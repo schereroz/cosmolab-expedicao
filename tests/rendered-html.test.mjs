@@ -23,6 +23,12 @@ test("keeps scientific evidence and child-safety language explicit", async () =>
   assert.match(data, /observed/);
   assert.match(data, /calculated_model/);
   assert.match(data, /inferred/);
+  assert.match(data, /Buraco negro estelar/);
+  assert.match(data, /Buraco branco/);
+  assert.match(data, /Buraco de minhoca/);
+  assert.match(data, /Gravastar/);
+  assert.match(data, /Fuzzball/);
+  assert.match(data, /sem materiais ou instruções de fabricação/);
   assert.match(uap, /Não identificado/);
   assert.match(uap, /Nave extraterrestre/);
   assert.match(shell, /Sem anúncios · sem chat/);

@@ -10,8 +10,8 @@ export function simulateCollision(
 ): CollisionResult {
   const velocityMs = speedKmS * 1000;
   const reducedMass = (projectile.massKg * target.massKg) / (projectile.massKg + target.massKg);
-  const energyJoules = 0.5 * projectile.massKg * velocityMs ** 2;
-  const momentum = projectile.massKg * velocityMs;
+  const energyJoules = projectile.energyOverrideJ ?? 0.5 * projectile.massKg * velocityMs ** 2;
+  const momentum = projectile.kind === "laser" ? energyJoules / 299_792_458 : projectile.massKg * velocityMs;
   const escapeVelocity = Math.sqrt(
     (2 * G * (projectile.massKg + target.massKg)) /
       (projectile.radiusM + target.radiusM),
@@ -23,7 +23,19 @@ export function simulateCollision(
   let outcome: CollisionResult["outcome"];
   let summary: string;
 
-  if (angleDegrees > 72 && speedRatio > 1.15) {
+  if ([projectile.kind, target.kind].some((kind) => ["buraco-branco", "minhoca", "gravastar", "fuzzball"].includes(kind))) {
+    outcome = "Interação hipotética";
+    summary = `Não existe evidência suficiente para prever esta interação com ${target.name}. O resultado é uma exploração teórica, não uma previsão.`;
+  } else if (projectile.kind === "laser") {
+    outcome = "Impacto";
+    summary = "O pulso deposita energia na camada externa do alvo. O dispositivo e sua potência são inteiramente ficcionais.";
+  } else if (projectile.kind === "bomba-virtual") {
+    outcome = "Fragmentação";
+    summary = "A carga virtual transfere a energia definida pelo cenário. Nenhum material, mecanismo ou instrução real é modelado.";
+  } else if (target.kind === "buraco-negro") {
+    outcome = angleDegrees > 68 && speedRatio > 1 ? "Desvio" : "Captura orbital";
+    summary = outcome === "Desvio" ? "O objeto passa em uma trajetória rasante no modelo newtoniano simplificado." : "O objeto cruza a região de captura representada pelo modelo; efeitos relativísticos detalhados não são calculados.";
+  } else if (angleDegrees > 72 && speedRatio > 1.15) {
     outcome = "Desvio";
     summary = "O encontro é rasante: os corpos trocam energia e seguem trajetórias diferentes.";
   } else if (speedRatio < 0.72) {

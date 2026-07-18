@@ -69,15 +69,30 @@ export interface PlanetRecord {
 export interface CelestialBody {
   id: string;
   name: string;
-  kind: "planeta" | "lua" | "asteroide" | "cometa";
+  kind:
+    | "planeta"
+    | "lua"
+    | "asteroide"
+    | "cometa"
+    | "buraco-negro"
+    | "buraco-branco"
+    | "minhoca"
+    | "gravastar"
+    | "fuzzball"
+    | "laser"
+    | "bomba-virtual"
+    | "ovni";
   massKg: number;
   radiusM: number;
   color: string;
   atmosphere: boolean;
+  evidence: EvidenceLevel;
+  description: string;
+  energyOverrideJ?: number;
 }
 
 export interface CollisionResult {
-  outcome: "Desvio" | "Captura orbital" | "Impacto" | "Fusão parcial" | "Fragmentação";
+  outcome: "Desvio" | "Captura orbital" | "Impacto" | "Fusão parcial" | "Fragmentação" | "Interação hipotética";
   energyJoules: number;
   momentum: number;
   velocityMs: number;
