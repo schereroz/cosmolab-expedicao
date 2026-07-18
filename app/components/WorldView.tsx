@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { missions, planets } from "../data";
 import type { GameProfile, PlanetRecord, ViewId } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
+import { SpaceFlightExperience } from "./SpaceFlightExperience";
 
 interface WorldViewProps {
   profile: GameProfile;
@@ -18,6 +20,8 @@ const regions = [
 ];
 
 export function WorldView({ profile, onNavigate, onPlanet }: WorldViewProps) {
+  const [flightDestination, setFlightDestination] = useState<PlanetRecord | undefined>();
+  const [showFlight, setShowFlight] = useState(false);
   const dailyIndex = [...(profile.lastActiveDate || "cosmolab")].reduce((total, character) => total + character.charCodeAt(0), 0) % missions.length;
   const dailyMission = missions[dailyIndex];
   const dailyCompleted = profile.completed.includes(dailyMission.id);
@@ -52,7 +56,7 @@ export function WorldView({ profile, onNavigate, onPlanet }: WorldViewProps) {
         ))}
 
         {planets.slice(0, 3).map((planet, index) => (
-          <button className={`landing-node landing-${index + 1}`} key={planet.id} onClick={() => onPlanet(planet)} aria-label={`Pousar em ${planet.name}`}>
+          <button className={`landing-node landing-${index + 1}`} key={planet.id} onClick={() => { setFlightDestination(planet); setShowFlight(true); }} aria-label={`Viajar para ${planet.name}`}>
             <span className={`planet-dot-${planet.id}`} aria-hidden="true" />
             <small>{planet.name}</small>
           </button>
@@ -64,6 +68,11 @@ export function WorldView({ profile, onNavigate, onPlanet }: WorldViewProps) {
       </div>
 
       <div className="world-actions">
+        <button className="action-tile flight-action" onClick={() => { setFlightDestination(undefined); setShowFlight(true); }}>
+          <span className="action-icon">▲</span>
+          <span><strong>Pilotar nave</strong><small>Assuma os controles, escolha um planeta e viaje em 3D.</small></span>
+          <b aria-hidden="true">→</b>
+        </button>
         <button className="action-tile cosmic-action" onClick={() => onNavigate("cosmic")}>
           <span className="action-icon">☄</span>
           <span><strong>Sandbox Cósmico</strong><small>Escolha astros, ajuste a rota e simule uma colisão.</small></span>
@@ -75,6 +84,7 @@ export function WorldView({ profile, onNavigate, onPlanet }: WorldViewProps) {
           <b aria-hidden="true">→</b>
         </button>
       </div>
+      {showFlight && <SpaceFlightExperience profile={profile} initialDestination={flightDestination} onClose={() => setShowFlight(false)} onArrive={(planet) => { setShowFlight(false); onPlanet(planet); }} />}
     </section>
   );
 }

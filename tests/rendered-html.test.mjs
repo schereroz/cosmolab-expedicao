@@ -90,3 +90,26 @@ test("supports safe study streaks, achievements, and discovery sharing", async (
   assert.match(journal, /sem nome ou dado pessoal/i);
   assert.match(journal, /Medalhas científicas/);
 });
+
+test("lets the selected animal pilot a 3D spacecraft between planets", async () => {
+  const flight = await readFile(new URL("../app/components/SpaceFlightExperience.tsx", import.meta.url), "utf8");
+  const world = await readFile(new URL("../app/components/WorldView.tsx", import.meta.url), "utf8");
+  assert.match(flight, /from "three"/);
+  assert.match(flight, /requestAnimationFrame/);
+  assert.match(flight, /ArrowUp/);
+  assert.match(flight, /Piloto automático/);
+  assert.match(flight, /cosmolab-crew-cockpit\.png/);
+  assert.match(flight, /aria-label="Acelerar nave"/);
+  assert.match(world, /Pilotar nave/);
+  assert.match(world, /SpaceFlightExperience/);
+});
+
+test("keeps the chosen animal beside the learner during planetary fieldwork", async () => {
+  const survey = await readFile(new URL("../app/components/PlanetSurvey.tsx", import.meta.url), "utf8");
+  const shell = await readFile(new URL("../app/components/CosmoApp.tsx", import.meta.url), "utf8");
+  assert.match(survey, /avatarId/);
+  assert.match(survey, /Companheiro de campo/);
+  assert.match(survey, /fieldTips/);
+  assert.match(survey, /cosmolab-crew-cockpit\.png/);
+  assert.match(shell, /avatarId=\{profile\.avatarId\}/);
+});

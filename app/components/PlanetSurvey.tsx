@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { evidenceLabels, planets } from "../data";
+import Image from "next/image";
+import { avatars, evidenceLabels, planets } from "../data";
 import type { GameProfile, PlanetRecord } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
 import { SciencePassport } from "./SciencePassport";
@@ -14,6 +15,13 @@ const tools = [
 ] as const;
 type ToolId = typeof tools[number]["id"];
 interface InstrumentReading { title: string; summary: string; rows: Array<{ label: string; display: string; level: number }>; method: string; }
+
+const fieldTips: Record<ToolId, string> = {
+  spectrometer: "Vamos procurar padrões de luz. Cada substância interage com comprimentos de onda de um jeito característico.",
+  microscope: "Uma imagem mostra forma e textura, mas precisamos cruzá-la com outros instrumentos antes de concluir a composição.",
+  seismic: "As ondas mudam ao atravessar camadas diferentes. É assim que investigamos um interior que não conseguimos ver.",
+  magnetic: "Um campo magnético pode revelar materiais condutores e processos internos — mas não responde tudo sozinho.",
+};
 
 const instrumentReadings: Record<string, Record<ToolId, InstrumentReading>> = {
   mars: {
@@ -42,11 +50,12 @@ const instrumentReadings: Record<string, Record<ToolId, InstrumentReading>> = {
   },
 };
 
-export function PlanetSurvey({ initialPlanet, mode, onClose }: { initialPlanet: PlanetRecord; mode: GameProfile["ageBand"]; onClose: () => void }) {
+export function PlanetSurvey({ initialPlanet, mode, avatarId, onClose }: { initialPlanet: PlanetRecord; mode: GameProfile["ageBand"]; avatarId: string; onClose: () => void }) {
   const [planet, setPlanet] = useState(initialPlanet);
   const [activeTool, setActiveTool] = useState<ToolId>("spectrometer");
   const evidence = evidenceLabels[planet.evidence];
   const instrumentReading = instrumentReadings[planet.id][activeTool];
+  const fieldCompanion = avatars.find((avatar) => avatar.id === avatarId) ?? avatars[0];
 
   return (
     <section className="planet-survey" aria-labelledby="planet-title">
@@ -76,10 +85,11 @@ export function PlanetSurvey({ initialPlanet, mode, onClose }: { initialPlanet: 
               <span aria-hidden="true">{tool.icon}</span>{tool.label}<b aria-hidden="true">→</b>
             </button>
           ))}
-          <div className="avatar-on-planet"><span aria-hidden="true">🐼</span><div><small>Explorador em campo</small><strong>Traje pressurizado</strong></div></div>
+          <div className="avatar-on-planet"><Image src="/cosmolab-crew-cockpit.png" alt="Tripulação animal da CosmoLab na cabine" width={1672} height={941} /><div><small>Companheiro de campo</small><strong>{fieldCompanion.name}</strong><span>{fieldCompanion.role}</span></div></div>
         </aside>
 
         <div className="survey-content">
+          <aside className="field-companion-tip" aria-live="polite"><strong>{fieldCompanion.name} observou:</strong><p>{fieldTips[activeTool]}</p></aside>
           <div className="survey-heading"><div><p className="eyebrow">Leitura do {tools.find((tool) => tool.id === activeTool)?.label}</p><h2>Composição e ambiente</h2></div><span className="live-reading"><i /> leitura concluída</span></div>
           <section className="instrument-reading-card" key={`${planet.id}-${activeTool}`} aria-labelledby="instrument-reading-title"><div className="instrument-reading-head"><div><small>LEITURA INSTRUMENTAL ESPECÍFICA</small><h3 id="instrument-reading-title">{instrumentReading.title}</h3></div><span>{tools.find((tool) => tool.id === activeTool)?.icon}</span></div><p>{instrumentReading.summary}</p><div className="instrument-bars">{instrumentReading.rows.map((row) => <div key={row.label}><span><b>{row.label}</b><small>{row.display}</small></span><meter min="0" max="100" value={row.level}>{row.level}%</meter></div>)}</div><div className="instrument-method"><strong>Como o instrumento sabe?</strong><p>{instrumentReading.method}</p></div></section>
           <div className="environment-grid">
