@@ -9,6 +9,7 @@ import { MatterLab } from "./MatterLab";
 import { MissionsView } from "./MissionsView";
 import { Onboarding } from "./Onboarding";
 import { PlanetSurvey } from "./PlanetSurvey";
+import { ProfileSettings } from "./ProfileSettings";
 import { UapArchive } from "./UapArchive";
 import { WorldView } from "./WorldView";
 
@@ -37,6 +38,8 @@ export function CosmoApp() {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [planet, setPlanet] = useState<PlanetRecord | null>(null);
   const [showTrail, setShowTrail] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -143,9 +146,10 @@ export function CosmoApp() {
           {navItems.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}</button>)}
         </nav>
         <div className="profile-cluster">
+          <button className="help-button" onClick={() => setShowHelp(true)} aria-label="Abrir guia de como jogar">?</button>
           <button className="trail-button" onClick={() => setShowTrail((value) => !value)} aria-expanded={showTrail}><span>◇</span><b>{profile.trail.length}</b><small>Trilha</small></button>
           <div className="xp-cluster"><span>NÍVEL {level}</span><div><i className="xp-fill" /></div><small>{levelProgress}/250 XP</small></div>
-          <button className="profile-button" onClick={() => setView("journal")}><span className="profile-avatar">{avatar.emoji}</span><span><strong>{profile.nickname}</strong><small>{profile.ageBand === "explorer" ? "Explorador" : "Pesquisador"}</small></span></button>
+          <button className="profile-button" onClick={() => setShowSettings(true)} aria-label="Abrir perfil de aprendizagem"><span className="profile-avatar">{avatar.emoji}</span><span><strong>{profile.nickname}</strong><small>{profile.ageBand === "explorer" ? "Explorador" : "Pesquisador"} · editar</small></span></button>
         </div>
       </header>
 
@@ -163,6 +167,8 @@ export function CosmoApp() {
 
       {planet && <div className="planet-overlay"><PlanetSurvey initialPlanet={planet} onClose={() => setPlanet(null)} /></div>}
       {showOnboarding && <Onboarding onComplete={finishOnboarding} />}
+      {showSettings && <ProfileSettings profile={profile} onChange={(next) => { setProfile(next); setToast(`Modo ${next.ageBand === "explorer" ? "Explorador" : "Pesquisador"} ativado`); }} onClose={() => setShowSettings(false)} />}
+      {showHelp && <div className="settings-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowHelp(false); }}><section className="settings-card help-card"><div className="drawer-heading"><div><p className="eyebrow">Central de bordo</p><h2 id="help-title">Como explorar o CosmoLab</h2></div><button onClick={() => setShowHelp(false)} aria-label="Fechar ajuda">×</button></div><div className="tour-steps compact"><article><span>1</span><div><strong>Escolha uma área</strong><p>Use o mapa ou o menu superior.</p></div></article><article><span>2</span><div><strong>Abra “Como jogar”</strong><p>Cada atividade mostra objetivo e passos.</p></div></article><article><span>3</span><div><strong>Faça uma previsão</strong><p>Ciência começa com uma pergunta testável.</p></div></article><article><span>4</span><div><strong>Compare evidências</strong><p>Confira o Passaporte Científico antes de concluir.</p></div></article></div><button className="primary-button settings-done" onClick={() => setShowHelp(false)}>Entendi, vamos explorar</button></section></div>}
       {toast && <div className="toast" role="status"><span>✓</span>{toast}</div>}
       <footer className="science-footer"><span><i /> Conteúdo científico versionado</span><span>Sem anúncios · sem chat · sem rastreamento infantil</span><a href="https://science.nasa.gov/" target="_blank" rel="noreferrer">Fontes e método ↗</a></footer>
     </div>

@@ -13,6 +13,9 @@ test("builds the complete CosmoLab game shell", async () => {
   assert.match(bundle, /Laboratório da Matéria/);
   assert.match(bundle, /Quem vai comandar esta expedição\?/);
   assert.match(bundle, /Pular para o conteúdo/);
+  assert.match(bundle, /Seu ciclo de descoberta/);
+  assert.match(bundle, /Perfil de aprendizagem/);
+  assert.match(bundle, /Como explorar o CosmoLab/);
   assert.doesNotMatch(bundle, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
 
