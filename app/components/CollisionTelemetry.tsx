@@ -4,6 +4,12 @@ import { useEffect, useMemo, useRef } from "react";
 import { buildEncounterTelemetry, formatScientific } from "../lib/science";
 import type { CelestialBody, CollisionResult } from "../types";
 
+function formatDuration(seconds: number) {
+  if (seconds < 0.001) return `${(seconds * 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} µs`;
+  if (seconds < 1) return `${(seconds * 1_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} ms`;
+  return `${seconds.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} s`;
+}
+
 export function CollisionTelemetry({ projectile, target, speed, angle, result }: { projectile: CelestialBody; target: CelestialBody; speed: number; angle: number; result: CollisionResult }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const telemetry = useMemo(() => buildEncounterTelemetry(projectile, target, speed, angle), [projectile, target, speed, angle]);
@@ -65,5 +71,6 @@ export function CollisionTelemetry({ projectile, target, speed, angle, result }:
     context.fillText("fim do cálculo", width - 100, height - 10);
   }, [telemetry, target.radiusM]);
 
-  return <section className="collision-telemetry" aria-labelledby="telemetry-title"><div className="telemetry-heading"><div><p className="eyebrow">Gráfico calculado</p><h2 id="telemetry-title">Telemetria do encontro</h2></div><span>{result.outcome}</span></div><canvas ref={canvasRef} aria-label={`Trajetória calculada de ${projectile.name} em direção a ${target.name}, com gráfico de velocidade relativa`} /><div className="telemetry-stats"><span><small>Maior aproximação</small><strong>{formatScientific(telemetry.closestApproachM)} m</strong></span><span><small>Velocidade máxima</small><strong>{(telemetry.peakSpeedMs / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km/s</strong></span><span><small>Tempo modelado</small><strong>{telemetry.durationS.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} s</strong></span></div><p>{telemetry.modelNote} A curva é quantitativa, mas não inclui relatividade, deformação ou dinâmica completa dos fluidos.</p></section>;
+  const relativisticWarning = telemetry.peakSpeedMs > 29_979_245.8;
+  return <section className="collision-telemetry" aria-labelledby="telemetry-title"><div className="telemetry-heading"><div><p className="eyebrow">Gráfico calculado</p><h2 id="telemetry-title">Telemetria do encontro</h2></div><span>{result.outcome}</span></div><canvas ref={canvasRef} aria-label={`Trajetória calculada de ${projectile.name} em direção a ${target.name}, com gráfico de velocidade relativa`} /><div className="telemetry-stats"><span><small>Maior aproximação</small><strong>{formatScientific(telemetry.closestApproachM)} m</strong></span><span><small>Velocidade máxima</small><strong>{(telemetry.peakSpeedMs / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km/s</strong></span><span><small>Tempo modelado</small><strong>{formatDuration(telemetry.durationS)}</strong></span></div><p>{telemetry.modelNote} A curva é quantitativa, mas não inclui relatividade, deformação ou dinâmica completa dos fluidos. {relativisticWarning && <strong>Velocidades relativísticas excedem a confiabilidade deste modelo newtoniano.</strong>}</p></section>;
 }

@@ -70,6 +70,8 @@ test("renders quantitative collision telemetry and instrument-specific surveys",
   const science = await readFile(new URL("../app/lib/science.ts", import.meta.url), "utf8");
   const survey = await readFile(new URL("../app/components/PlanetSurvey.tsx", import.meta.url), "utf8");
   assert.match(telemetry, /Telemetria do encontro/);
+  assert.match(telemetry, /formatDuration/);
+  assert.match(telemetry, /Velocidades relativísticas/);
   assert.match(science, /buildEncounterTelemetry/);
   assert.match(science, /Integração newtoniana simplificada/);
   for (const tool of ["spectrometer", "microscope", "seismic", "magnetic"]) assert.match(survey, new RegExp(`${tool}:`));
