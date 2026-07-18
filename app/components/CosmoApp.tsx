@@ -22,7 +22,7 @@ const demoProfile: GameProfile = {
   trail: ["mission-2", "mission-6"],
   discoveries: ["A água é polar", "Órbitas são quedas contínuas"],
   streak: 3,
-  lastActiveDate: localDateKey(),
+  lastActiveDate: "",
   badges: ["primeira-descoberta"],
 };
 
