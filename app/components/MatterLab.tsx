@@ -40,7 +40,8 @@ export function MatterLab({ mode }: { mode: GameProfile["ageBand"] }) {
   const [activeElement, setActiveElement] = useState<ElementRecord>(elements[7]);
   const [query, setQuery] = useState("");
   const [lesson, setLesson] = useState<"atom" | "bonds" | "trends">("atom");
-  const result = useMemo(() => combineElements(selected), [selected]);
+  const [temperature, setTemperature] = useState(25);
+  const result = useMemo(() => combineElements(selected, temperature), [selected, temperature]);
   const shells = useMemo(() => simplifiedShells(activeElement.number), [activeElement.number]);
   const elementBySymbol = useMemo(() => new Map(elements.map((element) => [element.symbol, element])), []);
   const matches = useMemo(() => {
@@ -87,9 +88,10 @@ export function MatterLab({ mode }: { mode: GameProfile["ageBand"] }) {
 
         <div className="molecule-panel">
           <div className="panel-title-row"><h2>Bancada molecular</h2><span>{selected.length} / 5 átomos</span></div>
+          <section className="lab-conditions" aria-label="Condições da bancada"><div><small>CONDIÇÃO CONTROLADA</small><strong>Temperatura da bancada</strong></div><output>{temperature} °C</output><input aria-label="Temperatura da bancada" type="range" min="-250" max="1000" step="5" value={temperature} onChange={(event) => setTemperature(Number(event.target.value))} /><p>Pressão mantida em <strong>1 atm</strong>. Alterar a temperatura ajuda a prever mudanças de estado, mas não cria uma substância nova.</p></section>
           <div className="molecule-stage" aria-label={`Representação de ${result.name}`}><div className="molecule-orbit" aria-hidden="true" />{selected.length === 0 ? <div className="molecule-empty"><span>⚛</span><p>Escolha elementos na tabela para começar.</p></div> : selected.map((element, index) => <div className={`atom atom-${index + 1} atom-${element.symbol.toLowerCase()}`} key={`${element.symbol}-${index}`}><strong>{element.symbol}</strong></div>)}</div>
           <div className="selected-atoms">{selected.map((element, index) => <button key={`${element.symbol}-${index}`} onClick={() => setSelected((items) => items.filter((_, itemIndex) => itemIndex !== index))} aria-label={`Remover ${element.name}`}>{element.symbol}<span>×</span></button>)}</div>
-          {selected.length > 0 && <div className={`molecule-result ${result.evidence === "hypothesis" ? "hypothesis-result" : ""}`}><span className="formula">{result.formula}</span><div><small>{evidenceLabels[result.evidence].label}</small><h2>{result.name}</h2><p>{result.fact}</p></div><div className="mass-pill"><small>Massa aproximada</small><strong>{result.mass.toFixed(3)} u</strong></div></div>}
+          {selected.length > 0 && <><div className={`molecule-result ${result.evidence === "hypothesis" ? "hypothesis-result" : ""}`}><span className="formula">{result.formula}</span><div><small>{evidenceLabels[result.evidence].label}</small><h2>{result.name}</h2><p>{result.fact}</p></div><div className="mass-pill"><small>Massa aproximada</small><strong>{result.mass.toFixed(3)} u</strong></div></div><div className="substance-readings"><span><small>Estado previsto a 1 atm</small><strong>{result.phase}</strong></span><span><small>Tipo de ligação</small><strong>{result.bondType}</strong></span><span><small>Transições aproximadas</small><strong>{result.meltingC === null ? "dados insuficientes" : result.meltingC === result.boilingC ? `${result.meltingC} °C · sublima` : `${result.meltingC} / ${result.boilingC} °C`}</strong></span></div></>}
           <div className="lab-challenge"><span>DESAFIO RÁPIDO</span><strong>Consegue montar água?</strong><p>Adicione 2 átomos de hidrogênio e 1 de oxigênio. Depois compare a fórmula e a massa.</p></div>
           <SciencePassport evidence={result.evidence} source={result.evidence === "observed" ? "PubChem e massas atômicas padrão" : "Combinação livre do usuário; estabilidade não determinada"} assumptions={["Massas atômicas padrão arredondadas", "Geometria visual não representa escala real", "Símbolos sozinhos não garantem estabilidade química"]} />
         </div>

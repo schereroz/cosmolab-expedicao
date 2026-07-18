@@ -12,14 +12,18 @@ export function MissionRunner({ mission, mode, onComplete, onClose }: { mission:
   const [value, setValue] = useState(challenge.variable.start);
   const [tested, setTested] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [experimentalRuns, setExperimentalRuns] = useState<Array<{ value: number; quality: number; result: string }>>([]);
   const inIdealRange = value >= challenge.variable.idealMin && value <= challenge.variable.idealMax;
   const hypothesisCorrect = hypothesis === challenge.correctChoice;
   const resultText = value < challenge.variable.idealMin ? challenge.lowResult : value > challenge.variable.idealMax ? challenge.highResult : challenge.idealResult;
   const buckets = useMemo(() => Array.from({ length: 16 }, (_, index) => challenge.variable.min + (index / 15) * (challenge.variable.max - challenge.variable.min)), [challenge]);
 
   function testHypothesis() {
+    const distanceFromRange = value < challenge.variable.idealMin ? challenge.variable.idealMin - value : value > challenge.variable.idealMax ? value - challenge.variable.idealMax : 0;
+    const quality = Math.max(0, Math.round(100 - (distanceFromRange / Math.max(1, challenge.variable.max - challenge.variable.min)) * 180));
     setTested(true);
     setAttempts((count) => count + 1);
+    setExperimentalRuns((runs) => [...runs.slice(-5), { value, quality, result: resultText }]);
     if (hypothesisCorrect && inIdealRange) setPhase("debrief");
   }
 
@@ -45,6 +49,7 @@ export function MissionRunner({ mission, mode, onComplete, onClose }: { mission:
             <div className="data-strip" aria-label="Escala do experimento">{buckets.map((bucket, index) => <i key={index} className={`${bucket >= challenge.variable.idealMin && bucket <= challenge.variable.idealMax ? "ideal" : ""} ${Math.abs(bucket - value) <= (challenge.variable.max - challenge.variable.min) / 30 ? "current" : ""}`} />)}</div>
             <div className="scale-labels"><span>{challenge.variable.min}{challenge.variable.unit}</span><small>faixa científica do desafio</small><span>{challenge.variable.max}{challenge.variable.unit}</span></div>
             <button className="primary-button test-hypothesis" onClick={testHypothesis}>▶ Testar hipótese</button>
+            <section className="experiment-log" aria-label="Registro de ensaios"><div className="panel-title-row"><h3>Registro de ensaios</h3><span>{experimentalRuns.length} medições</span></div>{experimentalRuns.length === 0 ? <p>Execute o primeiro teste. Repetir com valores diferentes revela o padrão, não apenas um resultado isolado.</p> : <div className="run-chart">{experimentalRuns.map((run, index) => <div key={`${run.value}-${index}`}><span><b>#{index + 1}</b>{run.value}{challenge.variable.unit}</span><meter min="0" max="100" value={run.quality} aria-label={`Qualidade do resultado ${run.quality}%`}>{run.quality}%</meter><small>{run.quality}%</small></div>)}</div>}<small>Qualidade do resultado = proximidade da faixa prevista pelo modelo. Não representa “nota” do aluno.</small></section>
           </div>
           <aside className="live-notebook">
             <p className="eyebrow">Caderno de campo</p><h2>Leitura do teste</h2>

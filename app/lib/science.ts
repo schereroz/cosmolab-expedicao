@@ -148,25 +148,38 @@ export function simulateCollision(
   };
 }
 
-const moleculeRecipes: Record<string, { formula: string; name: string; fact: string }> = {
-  "H-H-O": { formula: "H₂O", name: "Água", fact: "Uma molécula polar essencial para a vida conhecida." },
-  "Cl-Na": { formula: "NaCl", name: "Cloreto de sódio", fact: "Forma uma rede iônica sólida, não moléculas isoladas comuns." },
-  "C-O-O": { formula: "CO₂", name: "Dióxido de carbono", fact: "Molécula linear que absorve radiação infravermelha." },
-  "C-H-H-H-H": { formula: "CH₄", name: "Metano", fact: "Molécula tetraédrica e um gás de efeito estufa." },
-  "H-H-H-N": { formula: "NH₃", name: "Amônia", fact: "Tem geometria piramidal e participa do ciclo do nitrogênio." },
-  "O-O": { formula: "O₂", name: "Oxigênio molecular", fact: "Forma diatômica presente na atmosfera terrestre." },
+interface MoleculeRecipe { formula: string; name: string; fact: string; bondType: string; meltingC: number; boilingC: number; sublimesAt1Atm?: boolean; }
+const moleculeRecipes: Record<string, MoleculeRecipe> = {
+  "H-H-O": { formula: "H₂O", name: "Água", fact: "Uma molécula polar essencial para a vida conhecida.", bondType: "Covalente polar", meltingC: 0, boilingC: 100 },
+  "Cl-Na": { formula: "NaCl", name: "Cloreto de sódio", fact: "Forma uma rede iônica sólida, não moléculas isoladas comuns.", bondType: "Rede iônica", meltingC: 801, boilingC: 1413 },
+  "C-O-O": { formula: "CO₂", name: "Dióxido de carbono", fact: "Molécula linear que absorve radiação infravermelha.", bondType: "Covalente", meltingC: -78.5, boilingC: -78.5, sublimesAt1Atm: true },
+  "C-H-H-H-H": { formula: "CH₄", name: "Metano", fact: "Molécula tetraédrica e um gás de efeito estufa.", bondType: "Covalente apolar", meltingC: -182.5, boilingC: -161.5 },
+  "H-H-H-N": { formula: "NH₃", name: "Amônia", fact: "Tem geometria piramidal e participa do ciclo do nitrogênio.", bondType: "Covalente polar", meltingC: -77.7, boilingC: -33.3 },
+  "O-O": { formula: "O₂", name: "Oxigênio molecular", fact: "Forma diatômica presente na atmosfera terrestre.", bondType: "Covalente apolar", meltingC: -218.8, boilingC: -183 },
 };
 
-export function combineElements(selected: ElementRecord[]) {
+export function phaseAtTemperature(temperatureC: number, recipe?: MoleculeRecipe) {
+  if (!recipe) return "não determinado";
+  if (recipe.sublimesAt1Atm) return temperatureC < recipe.meltingC ? "sólido" : "gasoso (sublimação)";
+  if (temperatureC < recipe.meltingC) return "sólido";
+  if (temperatureC < recipe.boilingC) return "líquido";
+  return "gasoso";
+}
+
+export function combineElements(selected: ElementRecord[], temperatureC = 25) {
   const key = selected.map((item) => item.symbol).sort().join("-");
   const known = moleculeRecipes[key];
   const mass = selected.reduce((sum, item) => sum + item.mass, 0);
-  if (known) return { ...known, mass, evidence: "observed" as const };
+  if (known) return { ...known, mass, phase: phaseAtTemperature(temperatureC, known), evidence: "observed" as const };
   return {
     formula: selected.map((item) => item.symbol).join(""),
     name: "Combinação em estudo",
     fact: "Estes símbolos não definem sozinhos uma substância estável. Ligações, carga e condições também importam.",
     mass,
+    phase: "não determinado",
+    bondType: "estrutura não determinada",
+    meltingC: null,
+    boilingC: null,
     evidence: "hypothesis" as const,
   };
 }
