@@ -327,7 +327,7 @@ h2 { letter-spacing: -.025em; }
 
 @media (max-width: 1100px) {
   .app-header { grid-template-columns: 180px 1fr auto; }.brand { padding-inline: 14px; }.app-header nav button { min-width: 68px; }.xp-cluster { display: none; }
-  .matter-layout, .cosmic-layout { grid-template-columns: 1fr; }.control-panel { display: grid; grid-template-columns: 1fr 30px 1fr; gap: 10px; }.control-panel h2, .control-panel .range-label, .control-panel .body-readout, .control-panel .simulate-button, .guided-scenarios { grid-column: 1 / -1; }.versus-mark { align-self: end; margin-bottom: 15px; }
+  .matter-layout, .cosmic-layout { grid-template-columns: 1fr; }.control-panel { display: grid; grid-template-columns: 1fr 30px 1fr; gap: 10px; }.control-panel h2, .control-panel .range-label, .control-panel .body-readout, .control-panel .object-description, .control-panel .prediction-field, .control-panel .simulate-button, .guided-scenarios { grid-column: 1 / -1; }.versus-mark { align-self: end; margin-bottom: 15px; }
   .region-label { display: none; }.mission-list { grid-template-columns: 1fr; }.mission-row:nth-child(odd) { border-right: 0; }
   .frontier-grid { grid-template-columns: repeat(3, 1fr); }
 }
