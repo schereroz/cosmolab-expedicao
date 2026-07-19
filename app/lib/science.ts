@@ -195,7 +195,7 @@ export function simulateCollision(
   };
 }
 
-interface MoleculeRecipe { formula: string; name: string; fact: string; bondType: string; meltingC: number; boilingC: number; sublimesAt1Atm?: boolean; }
+interface MoleculeRecipe { formula: string; name: string; fact: string; bondType: string; meltingC: number | null; boilingC: number | null; sublimesAt1Atm?: boolean; decomposesC?: number; }
 const moleculeRecipes: Record<string, MoleculeRecipe> = {
   "H-H-O": { formula: "H₂O", name: "Água", fact: "Uma molécula polar essencial para a vida conhecida.", bondType: "Covalente polar", meltingC: 0, boilingC: 100 },
   "Cl-Na": { formula: "NaCl", name: "Cloreto de sódio", fact: "Forma uma rede iônica sólida, não moléculas isoladas comuns.", bondType: "Rede iônica", meltingC: 801, boilingC: 1413 },
@@ -203,10 +203,13 @@ const moleculeRecipes: Record<string, MoleculeRecipe> = {
   "C-H-H-H-H": { formula: "CH₄", name: "Metano", fact: "Molécula tetraédrica e um gás de efeito estufa.", bondType: "Covalente apolar", meltingC: -182.5, boilingC: -161.5 },
   "H-H-H-N": { formula: "NH₃", name: "Amônia", fact: "Tem geometria piramidal e participa do ciclo do nitrogênio.", bondType: "Covalente polar", meltingC: -77.7, boilingC: -33.3 },
   "O-O": { formula: "O₂", name: "Oxigênio molecular", fact: "Forma diatômica presente na atmosfera terrestre.", bondType: "Covalente apolar", meltingC: -218.8, boilingC: -183 },
+  "C-H-Na-O-O-O": { formula: "NaHCO₃", name: "Bicarbonato de sódio", fact: "É um sólido iônico formado por Na⁺ e HCO₃⁻. Com ácidos, pode liberar dióxido de carbono; ao aquecer, começa a se decompor em vez de simplesmente ferver.", bondType: "Rede iônica (Na⁺ e HCO₃⁻)", meltingC: null, boilingC: null, decomposesC: 50 },
 };
 
 export function phaseAtTemperature(temperatureC: number, recipe?: MoleculeRecipe) {
   if (!recipe) return "não determinado";
+  if (recipe.decomposesC !== undefined && temperatureC >= recipe.decomposesC) return "decomposição térmica";
+  if (recipe.meltingC === null || recipe.boilingC === null) return "sólido";
   if (recipe.sublimesAt1Atm) return temperatureC < recipe.meltingC ? "sólido" : "gasoso (sublimação)";
   if (temperatureC < recipe.meltingC) return "sólido";
   if (temperatureC < recipe.boilingC) return "líquido";
@@ -217,7 +220,7 @@ export function combineElements(selected: ElementRecord[], temperatureC = 25) {
   const key = selected.map((item) => item.symbol).sort().join("-");
   const known = moleculeRecipes[key];
   const mass = selected.reduce((sum, item) => sum + item.mass, 0);
-  if (known) return { ...known, mass, phase: phaseAtTemperature(temperatureC, known), evidence: "observed" as const };
+  if (known) return { ...known, decomposesC: known.decomposesC ?? null, mass, phase: phaseAtTemperature(temperatureC, known), evidence: "observed" as const };
   return {
     formula: selected.map((item) => item.symbol).join(""),
     name: "Combinação em estudo",
@@ -227,6 +230,7 @@ export function combineElements(selected: ElementRecord[], temperatureC = 25) {
     bondType: "estrutura não determinada",
     meltingC: null,
     boilingC: null,
+    decomposesC: null,
     evidence: "hypothesis" as const,
   };
 }

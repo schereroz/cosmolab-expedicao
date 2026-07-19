@@ -151,6 +151,24 @@ test("turns missions and the matter lab into repeatable experiments", async () =
   assert.match(science, /phaseAtTemperature/);
 });
 
+test("accepts sodium bicarbonate on the Matter Lab workbench", async () => {
+  const { elements } = await import("../app/data.ts");
+  const { combineElements } = await import("../app/lib/science.ts");
+  const matter = await readFile(new URL("../app/components/MatterLab.tsx", import.meta.url), "utf8");
+  const bySymbol = new Map(elements.map((element) => [element.symbol, element]));
+  const bicarbonateAtoms = ["Na", "H", "C", "O", "O", "O"].map((symbol) => bySymbol.get(symbol));
+
+  const roomTemperature = combineElements(bicarbonateAtoms, 25);
+  assert.equal(roomTemperature.formula, "NaHCO₃");
+  assert.equal(roomTemperature.name, "Bicarbonato de sódio");
+  assert.equal(roomTemperature.phase, "sólido");
+  assert.ok(Math.abs(roomTemperature.mass - 84.007) < 0.02);
+  assert.match(roomTemperature.bondType, /iônica/i);
+  assert.equal(combineElements(bicarbonateAtoms, 100).phase, "decomposição térmica");
+  assert.match(matter, /8 átomos/);
+  assert.match(matter, /items\.length >= 8/);
+});
+
 test("renders collisions as a physical 3D event instead of flat CSS bodies", async () => {
   const scene = await readFile(new URL("../app/components/CollisionScene3D.tsx", import.meta.url), "utf8");
   const cosmic = await readFile(new URL("../app/components/CosmicLab.tsx", import.meta.url), "utf8");
