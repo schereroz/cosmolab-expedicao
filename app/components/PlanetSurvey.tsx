@@ -5,6 +5,7 @@ import Image from "next/image";
 import { avatars, evidenceLabels, planets } from "../data";
 import type { GameProfile, PlanetRecord } from "../types";
 import { ActivityGuide } from "./ActivityGuide";
+import { PlanetaryFieldLab } from "./PlanetaryFieldLab";
 import { SciencePassport } from "./SciencePassport";
 
 const tools = [
@@ -53,6 +54,7 @@ const instrumentReadings: Record<string, Record<ToolId, InstrumentReading>> = {
 export function PlanetSurvey({ initialPlanet, mode, avatarId, onClose }: { initialPlanet: PlanetRecord; mode: GameProfile["ageBand"]; avatarId: string; onClose: () => void }) {
   const [planet, setPlanet] = useState(initialPlanet);
   const [activeTool, setActiveTool] = useState<ToolId>("spectrometer");
+  const [expeditionMode, setExpeditionMode] = useState<"survey" | "field">("survey");
   const evidence = evidenceLabels[planet.evidence];
   const instrumentReading = instrumentReadings[planet.id][activeTool];
   const fieldCompanion = avatars.find((avatar) => avatar.id === avatarId) ?? avatars[0];
@@ -74,9 +76,14 @@ export function PlanetSurvey({ initialPlanet, mode, avatarId, onClose }: { initi
         </div>
       </div>
 
-      <div className="planet-guide"><ActivityGuide title="Análise planetária" goal="Usar instrumentos para separar o que foi medido, inferido ou ainda é desconhecido." steps={["Escolha um mundo", "Ative um instrumento", "Compare ambiente e materiais", "Confira as fontes"]} reward="Explique se o ambiente poderia sustentar vida conhecida sem afirmar além dos dados." /></div>
+      <div className="planet-guide">{expeditionMode === "survey" ? <ActivityGuide title="Análise planetária" goal="Usar instrumentos para separar o que foi medido, inferido ou ainda é desconhecido." steps={["Escolha um mundo", "Ative um instrumento", "Compare ambiente e materiais", "Confira as fontes"]} reward="Explique se o ambiente poderia sustentar vida conhecida sem afirmar além dos dados." /> : <ActivityGuide title="Laboratório de campo" goal="Alterar uma variável virtual e comparar a sua hipótese com o modelo." steps={["Escolha uma amostra", "Adicione uma substância", "Registre sua hipótese", "Execute e compare"]} reward="Descubra uma transformação e explique o nível de evidência sem confundir modelo com fato." />}</div>
 
-      <div className="survey-body">
+      <nav className="planet-experience-tabs" aria-label="Modo da expedição">
+        <button className={expeditionMode === "survey" ? "active" : ""} onClick={() => setExpeditionMode("survey")} aria-pressed={expeditionMode === "survey"}><span>01</span><div><strong>Painel científico</strong><small>Meça composição e ambiente</small></div></button>
+        <button className={expeditionMode === "field" ? "active" : ""} onClick={() => setExpeditionMode("field")} aria-pressed={expeditionMode === "field"}><span>02</span><div><strong>{planet.landingMode === "sonda" ? "Laboratório da sonda" : "Laboratório de campo"}</strong><small>Interaja com objetos e substâncias</small></div></button>
+      </nav>
+
+      {expeditionMode === "field" ? <PlanetaryFieldLab key={planet.id} planet={planet} companionName={fieldCompanion.name} /> : <div className="survey-body">
         <aside className="instrument-panel">
           <h2>Instrumentos</h2>
           <p>Selecione uma ferramenta para examinar este mundo.</p>
@@ -125,7 +132,7 @@ export function PlanetSurvey({ initialPlanet, mode, avatarId, onClose }: { initi
           <SciencePassport evidence={planet.evidence} source={planet.source} assumptions={["Valores médios e arredondados", "Condições locais podem variar", "Ilustração fora de escala"]} />
           {mode === "researcher" && <div className="researcher-rubric"><small>MODO PESQUISADOR</small><p>Compare unidade, precisão e nível de evidência de cada leitura antes de combinar os resultados em uma conclusão.</p></div>}
         </div>
-      </div>
+      </div>}
     </section>
   );
 }

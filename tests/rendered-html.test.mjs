@@ -114,6 +114,36 @@ test("keeps the chosen animal beside the learner during planetary fieldwork", as
   assert.match(shell, /avatarId=\{profile\.avatarId\}/);
 });
 
+test("turns planetary landings into an interactive field laboratory", async () => {
+  const { planetaryTargets, planetarySubstances, simulatePlanetaryInteraction } = await import("../app/lib/planetaryLab.ts");
+  const survey = await readFile(new URL("../app/components/PlanetSurvey.tsx", import.meta.url), "utf8");
+  const fieldLab = await readFile(new URL("../app/components/PlanetaryFieldLab.tsx", import.meta.url), "utf8");
+
+  for (const planetId of ["mars", "europa", "jupiter", "kepler"]) {
+    assert.ok(planetaryTargets[planetId].length >= 3, `${planetId} needs explorable targets`);
+  }
+  assert.ok(planetarySubstances.length >= 5);
+
+  const marsWater = simulatePlanetaryInteraction({ planetId: "mars", targetId: "iron-rock", substanceId: "water" });
+  assert.equal(marsWater.evidence, "calculated_model");
+  assert.equal(marsWater.changeType, "Mudança física");
+  assert.match(marsWater.explanation, /pressão|atmosfera/i);
+  assert.ok(marsWater.timeline.length >= 10);
+  assert.ok(marsWater.timeline.every((point) => Number.isFinite(point.temperature) && Number.isFinite(point.spectralSignal)));
+
+  const exoplanetTest = simulatePlanetaryInteraction({ planetId: "kepler", targetId: "dark-rock", substanceId: "oxygen" });
+  assert.equal(exoplanetTest.evidence, "hypothesis");
+  assert.ok(exoplanetTest.uncertainty >= 80);
+  assert.match(exoplanetTest.explanation, /não foi observada|desconhecida/i);
+
+  assert.match(survey, /Laboratório de campo/);
+  assert.match(survey, /PlanetaryFieldLab/);
+  assert.match(fieldLab, /canvas/);
+  assert.match(fieldLab, /Sua hipótese/);
+  assert.match(fieldLab, /Comparação antes e depois/);
+  assert.match(fieldLab, /Júpiter não tem superfície sólida/i);
+});
+
 test("starts the flight inside an interactive first-person cockpit", async () => {
   const flight = await readFile(new URL("../app/components/SpaceFlightExperience.tsx", import.meta.url), "utf8");
   const cockpit = await readFile(new URL("../app/components/CockpitHUD.tsx", import.meta.url), "utf8");
