@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { blackHoleAbsorptionFrame } from "../lib/science";
 import type { CelestialBody, CollisionResult } from "../types";
 
 function createBody(body: CelestialBody, radius: number) {
@@ -15,6 +16,25 @@ function createBody(body: CelestialBody, radius: number) {
     const portal = new THREE.Mesh(new THREE.TorusGeometry(radius, radius * 0.3, 24, 96), new THREE.MeshStandardMaterial({ color: 0x4be1df, emissive: 0x165f77, emissiveIntensity: 3, metalness: 0.5, roughness: 0.2 }));
     portal.rotation.y = Math.PI / 2;
     group.add(portal);
+  } else if (body.kind === "estrela-neutrons") {
+    const core = new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 40), new THREE.MeshPhysicalMaterial({ color: 0xb9e3ff, emissive: 0x5ba7ff, emissiveIntensity: 1.8, roughness: 0.28, metalness: 0.12, clearcoat: 0.7 }));
+    const polarMaterial = new THREE.MeshBasicMaterial({ color: 0xf3fbff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending });
+    const northPole = new THREE.Mesh(new THREE.SphereGeometry(radius * 0.17, 20, 14), polarMaterial);
+    const southPole = northPole.clone();
+    northPole.position.y = radius * 0.94;
+    southPole.position.y = -radius * 0.94;
+    const fieldMaterial = new THREE.MeshBasicMaterial({ color: 0x66cfff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const innerField = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.55, radius * 0.018, 12, 96), fieldMaterial);
+    const outerField = new THREE.Mesh(new THREE.TorusGeometry(radius * 2.05, radius * 0.012, 12, 96), fieldMaterial.clone());
+    innerField.rotation.x = Math.PI / 2.7;
+    outerField.rotation.x = Math.PI / 2.7;
+    outerField.rotation.y = Math.PI / 3;
+    group.add(core, northPole, southPole, innerField, outerField);
+  } else if (body.kind === "estrela-planck") {
+    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(radius * 0.72, 3), new THREE.MeshBasicMaterial({ color: 0xf5ddff, blending: THREE.AdditiveBlending }));
+    const quantumShell = new THREE.Mesh(new THREE.IcosahedronGeometry(radius, 2), new THREE.MeshBasicMaterial({ color: 0xd18cff, transparent: true, opacity: 0.46, wireframe: true, blending: THREE.AdditiveBlending }));
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(radius * 1.35, 40, 28), new THREE.MeshBasicMaterial({ color: 0x8e5fff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide }));
+    group.add(core, quantumShell, halo);
   } else {
     const material = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(body.color), roughness: body.kind === "planeta" ? 0.72 : 0.48, metalness: 0.04, clearcoat: body.kind === "planeta" ? 0.08 : 0.25, emissive: new THREE.Color(body.color).multiplyScalar(body.kind === "laser" ? 0.8 : 0.04), emissiveIntensity: body.kind === "laser" ? 3 : 0.5, transparent: true });
     const sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 32), material);
@@ -84,12 +104,15 @@ export function CollisionScene3D({ projectile, target, speed, angle, result, run
 
     const resize = () => { const width = Math.max(1, canvas.clientWidth); const height = Math.max(1, canvas.clientHeight); renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix(); };
     const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(canvas); resize();
-    const clock = new THREE.Clock();
+    const timer = new THREE.Timer();
+    timer.connect(document);
     const duration = Math.max(1.7, 3.6 - speed / 45);
     let frame = 0;
-    const animate = () => {
+    let swallowStartPosition: { x: number; y: number; z: number } | null = null;
+    const animate = (timestamp?: number) => {
       frame = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
+      timer.update(timestamp);
+      const elapsed = timer.getElapsed();
       const progress = result ? Math.min(1, elapsed / duration) : 0;
       const approach = Math.min(1, progress / 0.7);
       const eased = 1 - (1 - approach) ** 3;
@@ -108,7 +131,48 @@ export function CollisionScene3D({ projectile, target, speed, angle, result, run
           for (let index = 0; index < positions.array.length; index += 3) { positions.array[index] = fragmentVelocity[index] * effectProgress; positions.array[index + 1] = fragmentVelocity[index + 1] * effectProgress; positions.array[index + 2] = fragmentVelocity[index + 2] * effectProgress; }
           positions.needsUpdate = true; (fragments.material as THREE.PointsMaterial).opacity = effectProgress < 0.95 ? 0.9 : 0.25; fragments.position.copy(flash.position);
         } else if (result?.visualEffect === "swallow") {
-          const swallowed = result.affectedBody === "target" ? targetBody : projectileBody; swallowed.position.lerp(result.affectedBody === "target" ? projectileBody.position : targetBody.position, effectProgress * 0.16); swallowed.scale.set(1 + effectProgress * 1.8, Math.max(0.02, 1 - effectProgress), Math.max(0.02, 1 - effectProgress)); setBodyOpacity(swallowed, 1 - effectProgress);
+          const swallowed = result.affectedBody === "target" ? targetBody : projectileBody;
+          const blackHoleBody = projectile.kind === "buraco-negro" ? projectileBody : targetBody;
+          if (!swallowStartPosition) swallowStartPosition = { x: swallowed.position.x, y: swallowed.position.y, z: swallowed.position.z };
+          const absorption = blackHoleAbsorptionFrame(swallowStartPosition, blackHoleBody.position, effectProgress);
+          swallowed.position.set(absorption.x, absorption.y, absorption.z);
+          swallowed.scale.set(absorption.scale * absorption.tidalStretch, absorption.scale, absorption.scale);
+          setBodyOpacity(swallowed, absorption.opacity);
+        } else if (result?.visualEffect === "tidal-disruption") {
+          const disrupted = result.affectedBody === "target" ? targetBody : projectileBody;
+          const compactBody = projectile.kind === "estrela-neutrons" ? projectileBody : targetBody;
+          if (!swallowStartPosition) swallowStartPosition = { x: disrupted.position.x, y: disrupted.position.y, z: disrupted.position.z };
+          const accretion = blackHoleAbsorptionFrame(swallowStartPosition, compactBody.position, effectProgress);
+          disrupted.position.set(accretion.x, accretion.y, accretion.z);
+          disrupted.scale.set(accretion.scale * accretion.tidalStretch * 1.8, accretion.scale * 0.7, accretion.scale * 0.7);
+          setBodyOpacity(disrupted, Math.max(0.06, accretion.opacity));
+          const positions = fragmentGeometry.getAttribute("position") as THREE.BufferAttribute;
+          for (let index = 0; index < positions.array.length; index += 3) { positions.array[index] = fragmentVelocity[index] * effectProgress * 0.42; positions.array[index + 1] = fragmentVelocity[index + 1] * effectProgress * 0.18; positions.array[index + 2] = fragmentVelocity[index + 2] * effectProgress * 0.3; }
+          positions.needsUpdate = true;
+          (fragments.material as THREE.PointsMaterial).opacity = Math.sin(effectProgress * Math.PI) * 0.95;
+          fragments.position.copy(compactBody.position);
+          flash.position.copy(compactBody.position);
+          flashMaterial.color.setHex(0x9ed7ff);
+        } else if (result?.visualEffect === "kilonova") {
+          projectileBody.scale.setScalar(Math.max(0.08, 1 - effectProgress * 0.9));
+          targetBody.scale.setScalar(1 + effectProgress * 0.18);
+          const positions = fragmentGeometry.getAttribute("position") as THREE.BufferAttribute;
+          for (let index = 0; index < positions.array.length; index += 3) { positions.array[index] = fragmentVelocity[index] * effectProgress * 1.35; positions.array[index + 1] = fragmentVelocity[index + 1] * effectProgress * 1.35; positions.array[index + 2] = fragmentVelocity[index + 2] * effectProgress; }
+          positions.needsUpdate = true;
+          (fragments.material as THREE.PointsMaterial).opacity = 1 - effectProgress * 0.45;
+          fragments.position.copy(flash.position);
+          flashMaterial.color.setHex(0xd7ecff);
+          flash.scale.setScalar(1 + effectProgress * 9);
+        } else if (result?.visualEffect === "quantum-bounce") {
+          const affected = result.affectedBody === "target" ? targetBody : projectileBody;
+          const planckBody = projectile.kind === "estrela-planck" ? projectileBody : targetBody;
+          const direction = result.affectedBody === "target" ? 1 : -1;
+          affected.position.x += direction * effectProgress ** 2 * 5.5;
+          affected.position.y += Math.sin(effectProgress * Math.PI) * 1.2;
+          planckBody.scale.setScalar(1 + Math.sin(effectProgress * Math.PI) * 0.42);
+          flash.position.copy(planckBody.position);
+          flashMaterial.color.setHex(0xd18cff);
+          flash.scale.setScalar(1 + effectProgress * 6.5);
         } else if (result?.visualEffect === "merge") {
           projectileBody.scale.setScalar(Math.max(0.02, 1 - effectProgress)); targetBody.scale.setScalar(1 + effectProgress * 0.14);
         } else if (result?.visualEffect === "portal") setBodyOpacity(projectileBody, 1 - effectProgress);
@@ -118,7 +182,7 @@ export function CollisionScene3D({ projectile, target, speed, angle, result, run
       renderer.render(scene, camera);
     };
     animate();
-    return () => { cancelAnimationFrame(frame); resizeObserver.disconnect(); scene.traverse((object) => { if (object instanceof THREE.Mesh || object instanceof THREE.Points) { object.geometry.dispose(); const material = object.material; if (Array.isArray(material)) material.forEach((item) => item.dispose()); else material.dispose(); } }); renderer.dispose(); };
+    return () => { cancelAnimationFrame(frame); timer.dispose(); resizeObserver.disconnect(); scene.traverse((object) => { if (object instanceof THREE.Mesh || object instanceof THREE.Points) { object.geometry.dispose(); const material = object.material; if (Array.isArray(material)) material.forEach((item) => item.dispose()); else material.dispose(); } }); renderer.dispose(); };
   }, [projectile, target, speed, angle, result, runId]);
 
   const blackHoleInvolved = projectile.kind === "buraco-negro" || target.kind === "buraco-negro";

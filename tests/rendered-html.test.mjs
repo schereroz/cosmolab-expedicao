@@ -164,6 +164,61 @@ test("renders collisions as a physical 3D event instead of flat CSS bodies", asy
   assert.doesNotMatch(cosmic, /projectile-body/);
 });
 
+test("pulls an astro through a black-hole horizon instead of repelling it", async () => {
+  const { blackHoleAbsorptionFrame, simulateCollision } = await import("../app/lib/science.ts");
+  const scene = await readFile(new URL("../app/components/CollisionScene3D.tsx", import.meta.url), "utf8");
+  const blackHole = { id: "black-hole-test", name: "Buraco negro", kind: "buraco-negro", massKg: 1.989e31, radiusM: 2.95e4, color: "#000000", atmosphere: false, evidence: "observed", description: "Teste" };
+  const planet = { id: "planet-test", name: "Planeta", kind: "planeta", massKg: 5.972e24, radiusM: 6.371e6, color: "#4b8fac", atmosphere: true, evidence: "observed", description: "Teste" };
+
+  const collision = simulateCollision(planet, blackHole, 80, 85);
+  assert.equal(collision.visualEffect, "swallow");
+  assert.equal(collision.affectedBody, "projectile");
+  const reverseCollision = simulateCollision(blackHole, planet, 80, 85);
+  assert.equal(reverseCollision.visualEffect, "swallow");
+  assert.equal(reverseCollision.affectedBody, "target");
+
+  const start = { x: 1.5, y: 0.4, z: 0 };
+  const center = { x: 3.4, y: 0, z: 0 };
+  const middle = blackHoleAbsorptionFrame(start, center, 0.5);
+  const end = blackHoleAbsorptionFrame(start, center, 1);
+  assert.ok(middle.x > start.x && middle.x < center.x, "the body should move inward during absorption");
+  assert.deepEqual({ x: end.x, y: end.y, z: end.z }, center);
+  assert.equal(end.opacity, 0);
+  assert.ok(end.scale <= 0.02);
+  assert.match(scene, /blackHoleAbsorptionFrame/);
+});
+
+test("adds evidence-aware neutron and Planck stars with distinct collision physics", async () => {
+  const { celestialBodies } = await import("../app/data.ts");
+  const { simulateCollision } = await import("../app/lib/science.ts");
+  const scene = await readFile(new URL("../app/components/CollisionScene3D.tsx", import.meta.url), "utf8");
+  const neutronStar = celestialBodies.find((body) => body.id === "neutron-star");
+  const planckStar = celestialBodies.find((body) => body.id === "planck-star");
+  const earth = celestialBodies.find((body) => body.id === "earth");
+
+  assert.equal(neutronStar?.kind, "estrela-neutrons");
+  assert.equal(neutronStar?.evidence, "observed");
+  assert.ok(neutronStar.massKg > earth.massKg * 100_000);
+  assert.equal(planckStar?.kind, "estrela-planck");
+  assert.equal(planckStar?.evidence, "hypothesis");
+
+  const tidalEncounter = simulateCollision(earth, neutronStar, 45, 35);
+  assert.equal(tidalEncounter.visualEffect, "tidal-disruption");
+  assert.equal(tidalEncounter.affectedBody, "projectile");
+  assert.ok(tidalEncounter.uncertainty >= 45);
+  assert.match(tidalEncounter.summary, /forças de maré/i);
+
+  const quantumEncounter = simulateCollision(earth, planckStar, 45, 35);
+  assert.equal(quantumEncounter.outcome, "Interação hipotética");
+  assert.equal(quantumEncounter.visualEffect, "quantum-bounce");
+  assert.ok(quantumEncounter.uncertainty >= 90);
+  assert.match(quantumEncounter.summary, /não foi observada|não confirmado/i);
+  assert.match(scene, /estrela-neutrons/);
+  assert.match(scene, /estrela-planck/);
+  assert.match(scene, /new THREE\.Timer/);
+  assert.doesNotMatch(scene, /new THREE\.Clock/);
+});
+
 test("keeps the complete exploration loop usable on phone screens", async () => {
   const app = await readFile(new URL("../app/components/CosmoApp.tsx", import.meta.url), "utf8");
   const world = await readFile(new URL("../app/components/WorldView.tsx", import.meta.url), "utf8");

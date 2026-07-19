@@ -17,9 +17,11 @@ const guidedScenarios = [
   { name: "Cometa rasante", projectile: "halley", target: "earth", speed: 52, angle: 78 },
   { name: "Sonda e buraco negro", projectile: "ufo", target: "black-hole", speed: 70, angle: 74 },
   { name: "Pulso em gravastar", projectile: "laser", target: "gravastar", speed: 80, angle: 40 },
+  { name: "Planeta e estrela de nêutrons", projectile: "earth", target: "neutron-star", speed: 45, angle: 35 },
+  { name: "Teste de estrela de Planck", projectile: "earth", target: "planck-star", speed: 45, angle: 35 },
 ];
 
-const frontierKinds = new Set(["buraco-negro", "buraco-branco", "minhoca", "gravastar", "fuzzball"]);
+const frontierKinds = new Set(["buraco-negro", "buraco-branco", "minhoca", "gravastar", "fuzzball", "estrela-neutrons", "estrela-planck"]);
 
 export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
   const [projectileId, setProjectileId] = useState("theia");
@@ -131,9 +133,9 @@ export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
               {mode === "researcher" ? <div className="cosmic-equations"><div><small>ENERGIA CINÉTICA</small><strong>Eₖ = ½mv²</strong><span>{formatScientific(projectile.massKg)} × ({result.velocityMs.toLocaleString("pt-BR")})² ÷ 2</span></div><div><small>MOMENTO LINEAR</small><strong>p = mv</strong><span>Direção também importa: momento é uma grandeza vetorial.</span></div></div> : <div className="explorer-comparison"><span>🧭</span><p><strong>Tradução visual:</strong> mais massa ou mais velocidade significa mais energia para aquecer, deformar e lançar material.</p></div>}
               <SciencePassport
                 evidence={scenarioEvidence}
-                source={scenarioEvidence === "calculated_model" ? "Gravitação newtoniana e limites didáticos de energia específica" : scenarioEvidence === "hypothesis" ? "Hipóteses teóricas de espaço-tempo e objetos compactos; sem confirmação observacional para este cenário" : "Artefato narrativo virtual do CosmoLab"}
+                source={[projectile.kind, target.kind].includes("estrela-neutrons") ? "NASA NICER: medições de massa, raio e matéria ultradensa em estrelas de nêutrons" : [projectile.kind, target.kind].includes("estrela-planck") ? "Rovelli & Vidotto, Planck stars (2014): hipótese de gravidade quântica em loop, sem confirmação observacional" : scenarioEvidence === "calculated_model" ? "Gravitação newtoniana e limites didáticos de energia específica" : scenarioEvidence === "hypothesis" ? "Hipóteses teóricas de espaço-tempo e objetos compactos; sem confirmação observacional para este cenário" : "Artefato narrativo virtual do CosmoLab"}
                 uncertainty={result.uncertainty}
-                assumptions={["Corpos aproximadamente esféricos", "Sem relatividade completa", "Fragmentação e atmosfera simplificadas", "Armas virtuais não representam tecnologia real"]}
+                assumptions={["Corpos aproximadamente esféricos", "Sem relatividade geral completa", "Fragmentação, plasma e campos magnéticos simplificados", "Armas virtuais não representam tecnologia real"]}
               />
             </div>
           ) : (
@@ -146,7 +148,7 @@ export function CosmicLab({ mode }: { mode: GameProfile["ageBand"] }) {
             <div className="frontier-grid">
               {celestialBodies.filter((body) => frontierKinds.has(body.kind)).map((body) => (
                 <button key={body.id} onClick={() => { setTargetId(body.id); if (projectileId === body.id) setProjectileId("earth"); setResult(null); }}>
-                  <span className={`frontier-icon frontier-${body.kind}`} aria-hidden="true">{body.kind === "buraco-negro" ? "●" : body.kind === "minhoca" ? "∞" : "◉"}</span>
+                  <span className={`frontier-icon frontier-${body.kind}`} aria-hidden="true">{body.kind === "buraco-negro" ? "●" : body.kind === "minhoca" ? "∞" : body.kind === "estrela-neutrons" ? "✺" : body.kind === "estrela-planck" ? "✧" : "◉"}</span>
                   <span><small>{evidenceLabels[body.evidence].label}</small><strong>{body.name}</strong><em>{body.description}</em></span>
                 </button>
               ))}

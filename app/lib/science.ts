@@ -10,6 +10,26 @@ export interface EncounterTelemetryPoint {
   speedMs: number;
 }
 
+interface Position3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export function blackHoleAbsorptionFrame(start: Position3, center: Position3, progress: number) {
+  const normalized = Math.max(0, Math.min(1, progress));
+  const inwardProgress = 1 - (1 - normalized) ** 3;
+  const spiralOffset = Math.sin(normalized * Math.PI * 4) * (1 - normalized) * 0.18;
+  return {
+    x: start.x + (center.x - start.x) * inwardProgress,
+    y: start.y + (center.y - start.y) * inwardProgress + spiralOffset,
+    z: start.z + (center.z - start.z) * inwardProgress + spiralOffset * 0.45,
+    scale: Math.max(0.015, 1 - inwardProgress * 0.985),
+    tidalStretch: 1 + Math.sin(normalized * Math.PI) * 1.6,
+    opacity: 1 - normalized,
+  };
+}
+
 export function buildEncounterTelemetry(projectile: CelestialBody, target: CelestialBody, speedKmS: number, angleDegrees: number) {
   const velocityUnit = Math.max(1, speedKmS * 1000);
   const lengthUnit = Math.max(1, projectile.radiusM + target.radiusM);
@@ -73,8 +93,10 @@ export function simulateCollision(
   const smallerBody = projectile.massKg <= target.massKg ? projectile : target;
   const smallerSide = projectile.massKg <= target.massKg ? "projectile" : "target";
   const massRatio = Math.max(projectile.massKg, target.massKg) / Math.max(1, Math.min(projectile.massKg, target.massKg));
+  let modelUncertainty = Math.round(12 + Math.min(28, speedRatio * 6));
 
   if (projectile.kind === "buraco-negro" || target.kind === "buraco-negro") {
+    modelUncertainty = 65;
     const blackHole = projectile.kind === "buraco-negro" ? projectile : target;
     const capturedBody = projectile.kind === "buraco-negro" ? target : projectile;
     if (angleDegrees > 76 && speedRatio > 1.2) {
@@ -88,17 +110,42 @@ export function simulateCollision(
       affectedBody = projectile.kind === "buraco-negro" ? "target" : "projectile";
       summary = `${capturedBody.name} cruza o horizonte de eventos de ${blackHole.name} e deixa de conseguir retornar. Para quem observa de longe, sua luz enfraqueceria e ficaria mais avermelhada.`;
     }
+  } else if (projectile.kind === "estrela-planck" || target.kind === "estrela-planck") {
+    modelUncertainty = 95;
+    outcome = "Interação hipotética";
+    visualEffect = "quantum-bounce";
+    affectedBody = projectile.kind === "estrela-planck" ? "target" : "projectile";
+    summary = "A animação representa um possível rebote quântico proposto em modelos de estrela de Planck. Essa interação não foi observada nem confirmada, e não pode ser prevista pela física newtoniana usada no restante do sandbox.";
+  } else if (projectile.kind === "estrela-neutrons" || target.kind === "estrela-neutrons") {
+    modelUncertainty = 55;
+    const bothNeutronStars = projectile.kind === "estrela-neutrons" && target.kind === "estrela-neutrons";
+    if (bothNeutronStars) {
+      outcome = "Fusão parcial";
+      visualEffect = "kilonova";
+      affectedBody = "both";
+      summary = "Duas estrelas de nêutrons podem se fundir, emitir ondas gravitacionais e alimentar uma quilonova. O remanescente depende da massa total e da equação de estado: pode ser outra estrela de nêutrons ou um buraco negro.";
+    } else {
+      const compactBody = projectile.kind === "estrela-neutrons" ? projectile : target;
+      const disruptedBody = projectile.kind === "estrela-neutrons" ? target : projectile;
+      outcome = "Fragmentação";
+      visualEffect = "tidal-disruption";
+      affectedBody = projectile.kind === "estrela-neutrons" ? "target" : "projectile";
+      summary = `As forças de maré de ${compactBody.name} deformam e fragmentam ${disruptedBody.name}; parte do material forma um fluxo de acreção muito quente. O detalhe real exigiria relatividade geral, magnetohidrodinâmica e a composição interna dos corpos.`;
+    }
   } else if (target.kind === "buraco-branco") {
+    modelUncertainty = 95;
     outcome = "Interação hipotética";
     visualEffect = "expel";
     affectedBody = "projectile";
     summary = "No conceito matemático de buraco branco, matéria não entraria e seria expelida. Nenhum buraco branco foi observado: esta animação é uma hipótese visual.";
   } else if (target.kind === "minhoca") {
+    modelUncertainty = 95;
     outcome = "Interação hipotética";
     visualEffect = "portal";
     affectedBody = "projectile";
     summary = "O objeto atravessa o portal apenas na narrativa. Buracos de minhoca atravessáveis não foram observados e talvez nem sejam fisicamente estáveis.";
   } else if ([projectile.kind, target.kind].some((kind) => ["gravastar", "fuzzball"].includes(kind))) {
+    modelUncertainty = 90;
     outcome = "Interação hipotética";
     visualEffect = "unknown";
     summary = `Não existe evidência suficiente para prever esta interação com ${target.name}. O brilho instável indica incerteza do modelo, não um resultado observado.`;
@@ -141,7 +188,7 @@ export function simulateCollision(
     energyJoules,
     momentum,
     velocityMs,
-    uncertainty: Math.round(12 + Math.min(28, speedRatio * 6)),
+    uncertainty: modelUncertainty,
     summary,
     visualEffect,
     affectedBody,

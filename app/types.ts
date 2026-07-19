@@ -96,6 +96,8 @@ export interface CelestialBody {
     | "minhoca"
     | "gravastar"
     | "fuzzball"
+    | "estrela-neutrons"
+    | "estrela-planck"
     | "laser"
     | "bomba-virtual"
     | "ovni";
@@ -115,7 +117,7 @@ export interface CollisionResult {
   velocityMs: number;
   uncertainty: number;
   summary: string;
-  visualEffect: "impact" | "shatter" | "swallow" | "deflect" | "merge" | "beam" | "expel" | "portal" | "unknown";
+  visualEffect: "impact" | "shatter" | "swallow" | "deflect" | "merge" | "beam" | "expel" | "portal" | "unknown" | "tidal-disruption" | "kilonova" | "quantum-bounce";
   affectedBody?: "projectile" | "target" | "both";
 }
 
