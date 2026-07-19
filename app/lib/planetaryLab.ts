@@ -29,6 +29,8 @@ export interface InteractionTimelinePoint {
 
 export interface PlanetaryInteractionResult {
   title: string;
+  feedbackTitle: string;
+  feedbackDetail: string;
   changeType: ChangeType;
   evidence: EvidenceLevel;
   uncertainty: number;
@@ -73,12 +75,21 @@ export const planetarySubstances: PlanetarySubstance[] = [
   { id: "methane", name: "Metano", formula: "CH₄", phase: "gás virtual", color: "#8dd8ba" },
 ];
 
-interface OutcomeTemplate extends Omit<PlanetaryInteractionResult, "timeline"> {
+interface OutcomeTemplate extends Omit<PlanetaryInteractionResult, "timeline" | "feedbackTitle" | "feedbackDetail"> {
   temperatureDelta: number;
   pressureDelta: number;
   spectralDelta: number;
   progressMax: number;
 }
+
+const visualFeedback: Record<PlanetaryInteractionResult["visualEffect"], { title: string; detail: string }> = {
+  frost: { title: "Cristais apareceram na amostra", detail: "O brilho azul mostra congelamento ou deposição no modelo; ele não representa uma nova substância automaticamente." },
+  dissolve: { title: "A superfície começou a se dissolver", detail: "O contorno perdeu definição e os sensores registraram material disperso antes do recongelamento." },
+  dust: { title: "Partículas ficaram sobre o objeto", detail: "A nuvem clara representa deposição do sólido virtual. Depositar não é o mesmo que reagir quimicamente." },
+  cloud: { title: "A sonda rastreou uma nova pluma", detail: "A cor é uma visualização instrumental em falsa cor para tornar visível um gás ou aerossol que poderia ser transparente." },
+  inert: { title: "Aplicação detectada — material estável", detail: "O pulso do scanner confirma que a substância chegou ao objeto, mas nenhum produto novo ou mudança macroscópica rápida foi detectado." },
+  unknown: { title: "Os dados não permitem uma conclusão", detail: "A faixa roxa representa possibilidades do modelo, não uma reação observada nem uma previsão confirmada." },
+};
 
 const planetBaselines: Record<PlanetaryLabId, { temperature: number; pressure: number; spectral: number; source: string }> = {
   mars: { temperature: -63, pressure: 0.6, spectral: 18, source: "NASA Mars Facts · superfície, atmosfera e água" },
@@ -201,6 +212,7 @@ export function simulatePlanetaryInteraction({ planetId, targetId, substanceId }
     progressMax: isExoplanet ? 25 : 12,
   };
   const template = { ...defaultTemplate, ...specific, evidence: isExoplanet ? "hypothesis" as const : specific?.evidence ?? defaultTemplate.evidence, uncertainty: isExoplanet ? 92 : specific?.uncertainty ?? defaultTemplate.uncertainty, source: specific?.source ?? baseline.source };
+  const feedback = visualFeedback[template.visualEffect];
   const timeline = Array.from({ length: 12 }, (_, index) => {
     const ratio = index / 11;
     const response = 1 - Math.exp(-4 * ratio);
@@ -215,6 +227,8 @@ export function simulatePlanetaryInteraction({ planetId, targetId, substanceId }
   });
   return {
     title: template.title,
+    feedbackTitle: feedback.title,
+    feedbackDetail: `${feedback.detail} Substância aplicada: ${substance.formula}.`,
     changeType: template.changeType,
     evidence: template.evidence,
     uncertainty: template.uncertainty,

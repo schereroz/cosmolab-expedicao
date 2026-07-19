@@ -136,12 +136,25 @@ test("turns planetary landings into an interactive field laboratory", async () =
   assert.ok(exoplanetTest.uncertainty >= 80);
   assert.match(exoplanetTest.explanation, /não foi observada|desconhecida/i);
 
+  for (const planetId of ["mars", "europa", "jupiter", "kepler"]) {
+    for (const target of planetaryTargets[planetId]) {
+      for (const substance of planetarySubstances) {
+        const interaction = simulatePlanetaryInteraction({ planetId, targetId: target.id, substanceId: substance.id });
+        assert.ok(interaction.feedbackTitle.length > 5, `${planetId}/${target.id}/${substance.id} needs visible feedback`);
+        assert.ok(interaction.feedbackDetail.length > 12, `${planetId}/${target.id}/${substance.id} needs feedback context`);
+      }
+    }
+  }
+
   assert.match(survey, /Laboratório de campo/);
   assert.match(survey, /PlanetaryFieldLab/);
   assert.match(fieldLab, /canvas/);
   assert.match(fieldLab, /Sua hipótese/);
   assert.match(fieldLab, /Comparação antes e depois/);
   assert.match(fieldLab, /Júpiter não tem superfície sólida/i);
+  assert.match(fieldLab, /SUBSTÂNCIA PREPARADA/);
+  assert.match(fieldLab, /experiment-feedback/);
+  assert.match(fieldLab, /run-confirmation/);
 });
 
 test("starts the flight inside an interactive first-person cockpit", async () => {

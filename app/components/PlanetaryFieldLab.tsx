@@ -15,6 +15,7 @@ const fieldChallenges: Record<PlanetaryLabId, string> = {
   jupiter: "Use a sonda para comparar duas camadas de nuvens.",
   kepler: "Monte uma hipótese sem transformar o cenário em fato.",
 };
+const effectIcons: Record<PlanetaryInteractionResult["visualEffect"], string> = { frost: "❄", dissolve: "≋", dust: "◌", cloud: "☁", inert: "◎", unknown: "?" };
 
 function ReactionChart({ timeline, title }: { timeline: InteractionTimelinePoint[]; title: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -117,18 +118,20 @@ export function PlanetaryFieldLab({ planet, companionName }: { planet: PlanetRec
         <div className="field-particles" aria-hidden="true">{Array.from({ length: 16 }, (_, index) => <i key={index} />)}</div>
         <div className="probe-beam" aria-hidden="true" />
         <div className="surface-targets" aria-label="Objetos disponíveis no ambiente">
-          {targets.map((item, index) => <button key={item.id} className={`${item.id === targetId ? "active" : ""} target-position-${index + 1}`} onClick={() => { setTargetId(item.id); setResult(null); }} aria-pressed={item.id === targetId}><span>{item.icon}</span><strong>{item.name}</strong><small>{item.evidence === "observed" ? "observado" : item.evidence === "inferred" ? "inferido" : "hipótese"}</small></button>)}
+          {targets.map((item, index) => <button key={item.id} className={`${item.id === targetId ? "active" : ""} ${result && item.id === targetId ? "reacted" : ""} target-position-${index + 1}`} onClick={() => { setTargetId(item.id); setResult(null); }} aria-pressed={item.id === targetId}><span>{item.icon}</span><strong>{item.name}</strong><small>{item.evidence === "observed" ? "observado" : item.evidence === "inferred" ? "inferido" : "hipótese"}</small></button>)}
         </div>
         <div className="field-hud field-hud-left"><small>AMBIENTE</small><strong>{planet.name}</strong><span>{planet.temperature}</span><span>{planet.pressure}</span></div>
         <div className="field-hud field-hud-right"><small>AMOSTRA FIXADA</small><strong>{target.name}</strong><span>{evidence.icon} {evidence.label}</span><span>{result ? `±${result.uncertainty}% incerteza` : "aguardando teste"}</span></div>
+        <div className="loaded-substance" style={{ "--substance-color": substance.color } as CSSProperties} aria-live="polite"><i /><div><small>SUBSTÂNCIA PREPARADA</small><strong>{substance.formula}</strong><span>{substance.name} · {substance.phase}</span></div></div>
         {result && <div className="substance-injection" style={{ "--substance-color": substance.color } as CSSProperties}><span>{substance.formula}</span></div>}
+        {result && <div className="experiment-feedback"><span>{effectIcons[result.visualEffect]}</span><div><small>RESPOSTA DA SIMULAÇÃO</small><strong>{result.feedbackTitle}</strong><p>{result.feedbackDetail}</p></div></div>}
         <div className="companion-transmission"><i>◉</i><p><strong>{companionName}:</strong> {result ? result.observation : "Escolha um objeto, formule uma hipótese e prepare a substância virtual."}</p></div>
       </div>
 
       <div className="field-console">
         <section className="sample-selector" aria-labelledby="sample-title"><div className="console-title"><span>1</span><div><small>OBJETO DO AMBIENTE</small><h3 id="sample-title">Selecionar amostra</h3></div></div><div className="sample-options">{targets.map((item) => <button key={item.id} className={item.id === targetId ? "active" : ""} onClick={() => { setTargetId(item.id); setResult(null); }} aria-pressed={item.id === targetId}><span>{item.icon}</span><div><strong>{item.name}</strong><small>{item.description}</small></div></button>)}</div></section>
         <section className="substance-selector" aria-labelledby="substance-title"><div className="console-title"><span>2</span><div><small>INVENTÁRIO VIRTUAL</small><h3 id="substance-title">Adicionar substância</h3></div></div><div className="substance-options">{planetarySubstances.map((item) => <button key={item.id} className={item.id === substanceId ? "active" : ""} onClick={() => { setSubstanceId(item.id); setResult(null); }} aria-pressed={item.id === substanceId}><i style={{ background: item.color }} /><strong>{item.formula}</strong><small>{item.name}</small></button>)}</div></section>
-        <section className="hypothesis-console" aria-labelledby="hypothesis-title"><div className="console-title"><span>3</span><div><small>MÉTODO CIENTÍFICO</small><h3 id="hypothesis-title">Sua hipótese</h3></div></div><label>O que acontecerá?<select value={prediction} onChange={(event) => setPrediction(event.target.value as ChangeType | "")}><option value="">Escolha antes do teste</option>{predictions.map((item) => <option key={item}>{item}</option>)}</select></label><button className="field-run-button" onClick={runExperiment}>Aplicar {substance.formula} virtualmente</button><p>Experiência somente digital. Não reproduza testes com materiais desconhecidos fora de um laboratório supervisionado.</p></section>
+        <section className="hypothesis-console" aria-labelledby="hypothesis-title"><div className="console-title"><span>3</span><div><small>MÉTODO CIENTÍFICO</small><h3 id="hypothesis-title">Sua hipótese</h3></div></div><label>O que acontecerá?<select value={prediction} onChange={(event) => setPrediction(event.target.value as ChangeType | "")}><option value="">Escolha antes do teste</option>{predictions.map((item) => <option key={item}>{item}</option>)}</select></label><button className="field-run-button" onClick={runExperiment}>Aplicar {substance.formula} agora</button>{result && <div className="run-confirmation" role="status"><b>{effectIcons[result.visualEffect]}</b><div><strong>{result.feedbackTitle}</strong><small>Resultado registrado abaixo e na superfície.</small></div></div>}<p>Experiência somente digital. Não reproduza testes com materiais desconhecidos fora de um laboratório supervisionado.</p></section>
       </div>
 
       <aside className="field-challenge"><span>MISSÃO EXTRA</span><strong>{fieldChallenges[planetId]}</strong><p>Ganhe uma descoberta diferente alterando apenas uma variável por rodada.</p></aside>
